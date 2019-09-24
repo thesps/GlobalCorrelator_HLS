@@ -27,7 +27,7 @@ int main() {
     PFNeutralObj outpho[NPHOTON], outpho_ref[NPHOTON];
     PFNeutralObj outne[NSELCALO], outne_ref[NSELCALO];
     PFChargedObj outmupf[NMU], outmupf_ref[NMU];
-#if defined(TESTMP7)
+#if defined(TESTMP7) || defined(TESTKU15P)
     /*
     MP7PatternSerializer serInPatterns( "mp7_input_patterns.txt", HLS_pipeline_II,HLS_pipeline_II-1); // mux each event into HLS_pipeline_II frames
     MP7PatternSerializer serOutPatterns("mp7_output_patterns.txt",HLS_pipeline_II,HLS_pipeline_II-1); // assume only one PF core running per chip,

@@ -94,8 +94,10 @@ template<typename T> void MP7PatternSerializer::print(unsigned int iframe, const
       count++;
       fprintf(file_, "Frame %04u :", iframe*6+count);
       }*/
-    if(!zero) fprintf(file_, " 1v%016x", unsigned(event[i]));
-    if(zero)  fprintf(file_, " 0v%016x", unsigned(event[i]));
+    //if(!zero) fprintf(file_, " 1v%016x", (unsigned long long int) event[i]);
+    //if(zero)  fprintf(file_, " 0v%016x", (unsigned long long int) event[i]);
+    if(!zero) fprintf(file_, " 1v%016llx", (unsigned long long int) event[i]);
+    if(zero)  fprintf(file_, " 0v%016llx", (unsigned long long int) event[i]);
   }
   //for(int j = 0; j < 60; j++) fprintf(file_, " 1v%016x", dummy); 
   fprintf(file_, "\n");

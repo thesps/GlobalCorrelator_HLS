@@ -644,15 +644,19 @@ void mp7wrapped_pack_in(EmCaloObj emcalo[NEMCALO], HadCaloObj hadcalo[NCALO], Tk
     #pragma HLS ARRAY_PARTITION variable=track complete
     #pragma HLS ARRAY_PARTITION variable=mu complete
     // pack inputs
-    assert(2*NEMCALO + 2*NTRACK + 2*NCALO + 2*NMU <= MP7_NCHANN);
-    #define HADOFFS 2*NEMCALO
-    #define TKOFFS 2*NCALO+HADOFFS
-    #define MUOFFS 2*NTRACK+TKOFFS
+    assert(WORD_FACTOR*NEMCALO + WORD_FACTOR*NTRACK + WORD_FACTOR*NCALO + WORD_FACTOR*NMU <= MP7_NCHANN);
+    #define HADOFFS WORD_FACTOR*NEMCALO
+    #define TKOFFS WORD_FACTOR*NCALO+HADOFFS
+    #define MUOFFS WORD_FACTOR*NTRACK+TKOFFS
     mp7_pack<NEMCALO,0>(emcalo, data);
     mp7_pack<NCALO,HADOFFS>(hadcalo, data);
     mp7_pack<NTRACK,TKOFFS>(track, data);
     mp7_pack<NMU,MUOFFS>(mu, data);
+#if WORD_FACTOR == 2
     z0 = 0.5*(data[MP7_NCHANN-1](15, 0) + data[MP7_NCHANN-2](15, 0));
+#elif WORD_FACTOR == 1
+    z0 = data[MP7_NCHANN-1](15, 0);
+# endif
 }
 
 void mp7wrapped_unpack_in(MP7DataWord data[MP7_NCHANN], EmCaloObj emcalo[NEMCALO], HadCaloObj hadcalo[NCALO], TkObj track[NTRACK], MuObj mu[NMU], z0_t &z0) {
@@ -662,15 +666,19 @@ void mp7wrapped_unpack_in(MP7DataWord data[MP7_NCHANN], EmCaloObj emcalo[NEMCALO
     #pragma HLS ARRAY_PARTITION variable=track complete
     #pragma HLS ARRAY_PARTITION variable=mu complete
     // unpack inputs
-    assert(2*NEMCALO + 2*NTRACK + 2*NCALO + 2*NMU <= MP7_NCHANN);
-    #define HADOFFS 2*NEMCALO
-    #define TKOFFS 2*NCALO+HADOFFS
-    #define MUOFFS 2*NTRACK+TKOFFS
+    assert(WORD_FACTOR*NEMCALO + WORD_FACTOR*NTRACK + WORD_FACTOR*NCALO + WORD_FACTOR*NMU <= MP7_NCHANN);
+    #define HADOFFS WORD_FACTOR*NEMCALO
+    #define TKOFFS WORD_FACTOR*NCALO+HADOFFS
+    #define MUOFFS WORD_FACTOR*NTRACK+TKOFFS
     mp7_unpack<NEMCALO,0>(data, emcalo);
     mp7_unpack<NCALO,HADOFFS>(data, hadcalo);
     mp7_unpack<NTRACK,TKOFFS>(data, track);
     mp7_unpack<NMU,MUOFFS>(data, mu);
+#if WORD_FACTOR == 2
     z0 = 0.5*(data[MP7_NCHANN-1](15, 0) + data[MP7_NCHANN-2](15, 0));
+#elif WORD_FACTOR == 1
+    z0 = data[MP7_NCHANN-1](15, 0);
+# endif
 }
 
 void mp7wrapped_pack_out( PFChargedObj pfch[NTRACK], PFNeutralObj pfpho[NPHOTON], PFNeutralObj pfne[NSELCALO], PFChargedObj pfmu[NMU], MP7DataWord data[MP7_NCHANN],z0_t z0) {
@@ -680,28 +688,20 @@ void mp7wrapped_pack_out( PFChargedObj pfch[NTRACK], PFNeutralObj pfpho[NPHOTON]
     #pragma HLS ARRAY_PARTITION variable=pfne complete
     #pragma HLS ARRAY_PARTITION variable=pfmu complete
     // pack outputs
-    assert(2*NTRACK + 2*NPHOTON + 2*NSELCALO + 2*NMU <= MP7_NCHANN);
-    #define PHOOFFS 2*NTRACK
-    #define NHOFFS 2*NPHOTON+PHOOFFS
-    #define PFMUOFFS 2*NSELCALO+NHOFFS
-    for (unsigned int i = 0; i < NTRACK; ++i) {
-        data[2*i+0] = ( pfch[i].hwId,  pfch[i].hwPt );
-        data[2*i+1] = ( pfch[i].hwZ0, pfch[i].hwPhi, pfch[i].hwEta );
-    }
-    for (unsigned int i = 0; i < NPHOTON; ++i) {
-        data[2*i+0+PHOOFFS] = ( pfpho[i].hwId, pfpho[i].hwPt );
-        data[2*i+1+PHOOFFS] = ( pfpho[i].hwPhi, pfpho[i].hwEta );
-    }
-    for (unsigned int i = 0; i < NSELCALO; ++i) {
-        data[2*i+0+NHOFFS] = ( pfne[i].hwId, pfne[i].hwPt );
-        data[2*i+1+NHOFFS] = ( pfne[i].hwPhi, pfne[i].hwEta );
-    }
-    for (unsigned int i = 0; i < NMU; ++i) {
-        data[2*i+0+PFMUOFFS] = ( pfmu[i].hwId, pfmu[i].hwPt );
-        data[2*i+1+PFMUOFFS] = ( pfmu[i].hwZ0, pfmu[i].hwPhi, pfmu[i].hwEta );
-    }
+    assert(WORD_FACTOR*NTRACK + WORD_FACTOR*NPHOTON + WORD_FACTOR*NSELCALO + WORD_FACTOR*NMU <= MP7_NCHANN);
+    #define PHOOFFS WORD_FACTOR*NTRACK
+    #define NHOFFS WORD_FACTOR*NPHOTON+PHOOFFS
+    #define PFMUOFFS WORD_FACTOR*NSELCALO+NHOFFS
+    mp7_pack<NTRACK,0>(pfch, data);
+    mp7_pack<NPHOTON,PHOOFFS>(pfpho, data);
+    mp7_pack<NSELCALO,NHOFFS>(pfne, data);
+    mp7_pack<NMU,PFMUOFFS>(pfmu, data); 
+#if WORD_FACTOR == 1
+    data[MP7_NCHANN-1] = z0;
+#elif WORD_FACTOR == 2
     data[MP7_NCHANN-2] = z0;
     data[MP7_NCHANN-1] = 5;
+#endif
 }
 void mp7wrapped_pack_out_necomb( PFChargedObj pfch[NTRACK], PFNeutralObj pfne_all[NNEUTRALS], PFChargedObj pfmu[NMU], MP7DataWord data[MP7_NCHANN], z0_t z0) {
     #pragma HLS ARRAY_PARTITION variable=data complete
@@ -709,29 +709,22 @@ void mp7wrapped_pack_out_necomb( PFChargedObj pfch[NTRACK], PFNeutralObj pfne_al
     #pragma HLS ARRAY_PARTITION variable=pfne_all complete
     #pragma HLS ARRAY_PARTITION variable=pfmu complete
     // pack outputs
-    assert(2*NTRACK + 2*NPHOTON + 2*NSELCALO + 2*NMU <= MP7_NCHANN);
-    #define PHOOFFS 2*NTRACK
-    #define NHOFFS 2*NPHOTON+PHOOFFS
-    #define PFMUOFFS 2*NSELCALO+NHOFFS
-    for (unsigned int i = 0; i < NTRACK; ++i) {
-        data[2*i+0] = ( pfch[i].hwId,  pfch[i].hwPt );
-        data[2*i+1] = ( pfch[i].hwZ0, pfch[i].hwPhi, pfch[i].hwEta );
-    }
-    for (unsigned int i = 0; i < NPHOTON; ++i) {
-        data[2*i+0+PHOOFFS] = ( pfne_all[i].hwPtPuppi, pfne_all[i].hwPt );
-        data[2*i+1+PHOOFFS] = ( pfne_all[i].hwId, pfne_all[i].hwPhi, pfne_all[i].hwEta );
-    }
-    for (unsigned int i = 0; i < NSELCALO; ++i) {
-        data[2*i+0+NHOFFS] = ( pfne_all[i+NPHOTON].hwPtPuppi, pfne_all[i+NPHOTON].hwPt );
-        data[2*i+1+NHOFFS] = ( pfne_all[i+NPHOTON].hwId, pfne_all[i+NPHOTON].hwPhi, pfne_all[i+NPHOTON].hwEta );
-    }
-    for (unsigned int i = 0; i < NMU; ++i) {
-        data[2*i+0+PFMUOFFS] = ( pfmu[i].hwId, pfmu[i].hwPt );
-        data[2*i+1+PFMUOFFS] = ( pfmu[i].hwZ0, pfmu[i].hwPhi, pfmu[i].hwEta );
-    }
+    assert(WORD_FACTOR*NTRACK + WORD_FACTOR*NPHOTON + WORD_FACTOR*NSELCALO + WORD_FACTOR*NMU <= MP7_NCHANN);
+    #define PHOOFFS WORD_FACTOR*NTRACK
+    #define NHOFFS WORD_FACTOR*NPHOTON+PHOOFFS
+    #define PFMUOFFS WORD_FACTOR*NSELCALO+NHOFFS
+    mp7_pack<NTRACK,0>(pfch, data);
+    mp7_pack<NPHOTON,PHOOFFS>(pfne_all, data);
+    mp7_pack<NSELCALO,NHOFFS>(pfne_all, data);
+    mp7_pack<NMU,PFMUOFFS>(pfmu, data); 
+#if WORD_FACTOR == 1
+    data[MP7_NCHANN-1] = ( MP7DataWord(5), z0 );
+#elif WORD_FACTOR == 2
     data[MP7_NCHANN-2] = z0;
     data[MP7_NCHANN-1] = 5;
+#endif
 }
+
 void mp7wrapped_unpack_out( MP7DataWord data[MP7_NCHANN], PFChargedObj pfch[NTRACK], PFNeutralObj pfpho[NPHOTON], PFNeutralObj pfne[NSELCALO], PFChargedObj pfmu[NMU], z0_t &z0) {
     #pragma HLS ARRAY_PARTITION variable=data complete
     #pragma HLS ARRAY_PARTITION variable=pfch complete
@@ -739,78 +732,24 @@ void mp7wrapped_unpack_out( MP7DataWord data[MP7_NCHANN], PFChargedObj pfch[NTRA
     #pragma HLS ARRAY_PARTITION variable=pfne complete
     #pragma HLS ARRAY_PARTITION variable=pfmu complete
     // unpack outputs
-    assert(2*NTRACK + 2*NPHOTON + 2*NSELCALO + 2*NMU <= MP7_NCHANN);
-    #define PHOOFFS 2*NTRACK
-    #define NHOFFS 2*NPHOTON+PHOOFFS
-    #define PFMUOFFS 2*NSELCALO+NHOFFS
-    for (unsigned int i = 0; i < NTRACK; ++i) {
-        pfch[i].hwPt  = data[2*i+0](15, 0);
-        pfch[i].hwId  = data[2*i+0](18,16);
-        pfch[i].hwEta = data[2*i+1](9, 0);
-        pfch[i].hwPhi = data[2*i+1](19,10);
-        pfch[i].hwZ0  = data[2*i+1](29,20);
-    }
-    for (unsigned int i = 0; i < NPHOTON; ++i) {
-        pfpho[i].hwPt  = data[2*i+0+PHOOFFS](15, 0);
-        pfpho[i].hwId  = data[2*i+0+PHOOFFS](18,16);
-        pfpho[i].hwEta = data[2*i+1+PHOOFFS](9, 0);
-        pfpho[i].hwPhi = data[2*i+1+PHOOFFS](19,10);
-    }
-    for (unsigned int i = 0; i < NSELCALO; ++i) {
-        pfne[i].hwPt  = data[2*i+0+NHOFFS](15, 0);
-        pfne[i].hwId  = data[2*i+0+NHOFFS](18,16);
-        pfne[i].hwEta = data[2*i+1+NHOFFS](9, 0);
-        pfne[i].hwPhi = data[2*i+1+NHOFFS](19,10);
-    }
-    for (unsigned int i = 0; i < NMU; ++i) {
-        pfmu[i].hwPt  = data[2*i+0+PFMUOFFS](15, 0);
-        pfmu[i].hwId  = data[2*i+0+PFMUOFFS](18,16);
-        pfmu[i].hwEta = data[2*i+1+PFMUOFFS](9, 0);
-        pfmu[i].hwPhi = data[2*i+1+PFMUOFFS](19,10);
-        pfmu[i].hwZ0  = data[2*i+1+PFMUOFFS](29,20);
-    }
+    assert(WORD_FACTOR*NTRACK + WORD_FACTOR*NPHOTON + WORD_FACTOR*NSELCALO + WORD_FACTOR*NMU <= MP7_NCHANN);
+    #define PHOOFFS WORD_FACTOR*NTRACK
+    #define NHOFFS WORD_FACTOR*NPHOTON+PHOOFFS
+    #define PFMUOFFS WORD_FACTOR*NSELCALO+NHOFFS
+    mp7_unpack<NTRACK,0>(data, pfch);
+    mp7_unpack<NPHOTON,PHOOFFS>(data, pfpho);
+    mp7_unpack<NSELCALO,NHOFFS>(data, pfne);
+    mp7_unpack<NMU,PFMUOFFS>(data, pfmu);
+# if WORD_FACTOR == 2
     z0 = 0.5*(data[MP7_NCHANN-1](15, 0) + data[MP7_NCHANN-2](15, 0));
+#elif WORD_FACTOR == 1
+    z0 = data[MP7_NCHANN-1](15, 0);
+#endif
 }
+
 void mp7wrapped_unpack_out_necomb( MP7DataWord data[MP7_NCHANN], PFChargedObj pfch[NTRACK], PFNeutralObj pfpho[NPHOTON], PFNeutralObj pfne[NSELCALO], PFChargedObj pfmu[NMU], z0_t &z0) {
-    #pragma HLS ARRAY_PARTITION variable=data complete
-    #pragma HLS ARRAY_PARTITION variable=pfch complete
-    #pragma HLS ARRAY_PARTITION variable=pfpho complete
-    #pragma HLS ARRAY_PARTITION variable=pfne complete
-    #pragma HLS ARRAY_PARTITION variable=pfmu complete
-    // unpack outputs
-    assert(2*NTRACK + 2*NPHOTON + 2*NSELCALO + 2*NMU <= MP7_NCHANN);
-    #define PHOOFFS 2*NTRACK
-    #define NHOFFS 2*NPHOTON+PHOOFFS
-    #define PFMUOFFS 2*NSELCALO+NHOFFS
-    for (unsigned int i = 0; i < NTRACK; ++i) {
-        pfch[i].hwPt  = data[2*i+0](15, 0);
-        pfch[i].hwId  = data[2*i+0](18,16);
-        pfch[i].hwEta = data[2*i+1](9, 0);
-        pfch[i].hwPhi = data[2*i+1](19,10);
-        pfch[i].hwZ0  = data[2*i+1](29,20);
-    }
-    for (unsigned int i = 0; i < NPHOTON; ++i) {
-        pfpho[i].hwPt  = data[2*i+0+PHOOFFS](15, 0);
-        pfpho[i].hwPtPuppi  = data[2*i+0+PHOOFFS](31,16);
-        pfpho[i].hwEta = data[2*i+1+PHOOFFS](9, 0);
-        pfpho[i].hwPhi = data[2*i+1+PHOOFFS](19,10);
-        pfpho[i].hwId  = data[2*i+1+PHOOFFS](22,20);
-    }
-    for (unsigned int i = 0; i < NSELCALO; ++i) {
-        pfne[i].hwPt  = data[2*i+0+NHOFFS](15, 0);
-        pfne[i].hwPtPuppi  = data[2*i+0+NHOFFS](31, 16);
-        pfne[i].hwEta = data[2*i+1+NHOFFS](9, 0);
-        pfne[i].hwPhi = data[2*i+1+NHOFFS](19,10);
-        pfne[i].hwId  = data[2*i+1+NHOFFS](22,20);
-    }
-    for (unsigned int i = 0; i < NMU; ++i) {
-        pfmu[i].hwPt  = data[2*i+0+PFMUOFFS](15, 0);
-        pfmu[i].hwId  = data[2*i+0+PFMUOFFS](18,16);
-        pfmu[i].hwEta = data[2*i+1+PFMUOFFS](9, 0);
-        pfmu[i].hwPhi = data[2*i+1+PFMUOFFS](19,10);
-        pfmu[i].hwZ0  = data[2*i+1+PFMUOFFS](29,20);
-    }
-    z0 = 0.5*(data[MP7_NCHANN-1](15, 0) + data[MP7_NCHANN-2](15, 0));
+    #pragma HLS inline
+    mp7wrapped_unpack_out(data, pfch, pfpho, pfne, pfmu, z0);
 }
 
 void mp7wrapped_pfalgo3_full(MP7DataWord input[MP7_NCHANN], MP7DataWord output[MP7_NCHANN]) {
@@ -862,7 +801,7 @@ void mp7wrapped_pfalgo3_full(MP7DataWord input[MP7_NCHANN], MP7DataWord output[M
         pfne_all[i+NPHOTON] = pfne[i];
     }
     simple_puppi_hw(pfch, pfne_all, drvals, z0);
-    mp7wrapped_pack_out_necomb(pfch, pfne_all, pfmu, output,z0);
-    //mp7wrapped_pack_out(pfch, pfpho, pfne, pfmu, output);
+    //mp7wrapped_pack_out_necomb(pfch, pfne_all, pfmu, output,z0);
+    mp7wrapped_pack_out(pfch, pfpho, pfne, pfmu, output, z0);
 }
 

@@ -2,7 +2,7 @@
 source config_hls_fullpfalgo_mp7.tcl
 
 # open the project, don't forget to reset
-open_project -reset "l1pfpuppi-resource-test"
+open_project -reset "l1pfpuppi-mp7"
 set_top ${l1pfTopFunc}
 #set_top pfalgo3_full
 add_files firmware/simple_fullpfalgo.cpp -cflags "-DTESTMP7 -DHLS_pipeline_II=6"

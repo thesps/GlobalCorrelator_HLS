@@ -24,7 +24,17 @@ enum PID { PID_Charged=0, PID_Neutral=1, PID_Photon=2, PID_Electron=3, PID_Muon=
 #define VTXPTMAX  200
 
 // PF
-//#ifdef TESTMP7  // reduced input size to fit in a board
+#ifdef TESTMP7  // reduced input size to fit in a board
+   #define NTRACK 14
+   #define NCALO 10
+   #define NMU 2
+   #define NEMCALO 10
+   #define NPHOTON NEMCALO
+   #define NSELCALO 10
+   #define DATA_SIZE 32
+   #define WORD_FACTOR 2
+   #define NTAU 6
+#elif TESTKU15P
    #define NTRACK 14
    #define NCALO 10
    #define NMU 2
@@ -32,28 +42,31 @@ enum PID { PID_Charged=0, PID_Neutral=1, PID_Photon=2, PID_Electron=3, PID_Muon=
    #define NPHOTON NEMCALO
    #define NSELCALO 10
    #define DATA_SIZE 64
+   #define WORD_FACTOR 1
    #define NTAU 6
-//#elif TESTCTP7  // reduced input size to fit in a board
-//   #define NTRACK 7
-//   #define NCALO 5
-//   #define NMU 2
-//   #define NEMCALO 5
-//   #define NPHOTON NEMCALO
-//   #define NSELCALO 4
-//#else
-   // #define NTRACK 15
-  // #define NCALO 15
-   // #define NMU 4
-   // #define NEMCALO 15
-   // #define NPHOTON NEMCALO
-   // #define NSELCALO 10
-//   #define NTRACK 7
-//   #define NCALO 5
-//   #define NMU 2
-//   #define NEMCALO 5
-//   #define NPHOTON NEMCALO
-//   #define NSELCALO 4
-//#endif
+#elif TESTCTP7  // reduced input size to fit in a board
+   #define NTRACK 7
+   #define NCALO 5
+   #define NMU 2
+   #define NEMCALO 5
+   #define NPHOTON NEMCALO
+   #define NSELCALO 4
+   #define DATA_SIZE 32
+   #define WORD_FATOR 2
+#else
+   #define NTRACK 15
+   #define NCALO 15
+   #define NMU 4
+   #define NEMCALO 15
+   #define NPHOTON NEMCALO
+   #define NSELCALO 10
+   #define NTRACK 7
+   #define NCALO 5
+   #define NMU 2
+   #define NEMCALO 5
+   #define NPHOTON NEMCALO
+   #define NSELCALO 4
+#endif
 
 // PUPPI & CHS
 #define NPVTRACK 15
@@ -117,7 +130,12 @@ struct VtxObj {
 	particleid_t hwId;
 };
 
+#ifdef TESTMP7
 #define MP7_NCHANN 72
+#elif defined(TESTKU15P)
+#define MP7_NCHANN 44
+#endif
+
 #define CTP7_NCHANN_IN 67
 #define CTP7_NCHANN_OUT 48
 //Note trying to upgrade to 64
