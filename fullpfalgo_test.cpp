@@ -28,21 +28,21 @@ int main() {
     PFNeutralObj outne[NSELCALO], outne_ref[NSELCALO];
     PFChargedObj outmupf[NMU], outmupf_ref[NMU];
 #if defined(TESTMP7) || defined(TESTKU15P)
-    /*
+    
     MP7PatternSerializer serInPatterns( "mp7_input_patterns.txt", HLS_pipeline_II,HLS_pipeline_II-1); // mux each event into HLS_pipeline_II frames
     MP7PatternSerializer serOutPatterns("mp7_output_patterns.txt",HLS_pipeline_II,HLS_pipeline_II-1); // assume only one PF core running per chip,
     MP7PatternSerializer serInPatterns2( "mp7_input_patterns_magic.txt", HLS_pipeline_II,-HLS_pipeline_II+1); // mux each event into HLS_pipeline_II frames
     MP7PatternSerializer serOutPatterns2("mp7_output_patterns_magic.txt",HLS_pipeline_II,-HLS_pipeline_II+1); // assume only one PF core running per chip,
     MP7PatternSerializer serInPatterns3( "mp7_input_patterns_nomux.txt");  // 
     MP7PatternSerializer serOutPatterns3("mp7_output_patterns_nomux.txt"); // ,
-    */
+    
 
-    MP7PatternSerializer serInPatterns( "mp7_input_patterns.txt");
+    /*MP7PatternSerializer serInPatterns( "mp7_input_patterns.txt");
     MP7PatternSerializer serOutPatterns("mp7_output_patterns.txt");
     MP7PatternSerializer serInPatterns2( "mp7_input_patterns_magic.txt");
     MP7PatternSerializer serOutPatterns2("mp7_output_patterns_magic.txt");
     MP7PatternSerializer serInPatterns3( "mp7_input_patterns_nomux.txt");  // 
-    MP7PatternSerializer serOutPatterns3("mp7_output_patterns_nomux.txt"); // ,
+    MP7PatternSerializer serOutPatterns3("mp7_output_patterns_nomux.txt"); // ,*/
 #endif
 #if defined(TESTCTP7)
     CTP7PatternSerializer serInPatterns4( "ctp7_input_patterns_nomux.txt",CTP7_NCHANN_IN, true);  // 

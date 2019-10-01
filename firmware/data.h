@@ -133,7 +133,7 @@ struct VtxObj {
 #ifdef TESTMP7
 #define MP7_NCHANN 72
 #elif defined(TESTKU15P)
-#define MP7_NCHANN 44
+#define MP7_NCHANN 42
 #endif
 
 #define CTP7_NCHANN_IN 67

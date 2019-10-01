@@ -140,6 +140,7 @@ template<unsigned int N, unsigned int OFFS>
 inline void mp7_pack(HadCaloObj hadcalo[N], MP7DataWord data[]) {
     #pragma HLS inline
     for (unsigned int i = 0; i < N; ++i) {
+        data[i+OFFS] = 0;
         data[i+OFFS](31+32,16+32) = hadcalo[i].hwEmPt;
         data[i+OFFS](15+32, 0+32) = hadcalo[i].hwPt;
         data[i+OFFS](9, 0) = hadcalo[i].hwEta;
@@ -152,6 +153,7 @@ template<unsigned int N, unsigned int OFFS>
 inline void mp7_pack(TkObj track[N], MP7DataWord data[]) {
     #pragma HLS inline
     for (unsigned int i = 0; i < N; ++i) {
+        data[i+OFFS] = 0;
         data[i+OFFS](31+32,16+32) = track[i].hwPtErr;
         data[i+OFFS](15+32, 0+32) = track[i].hwPt;
         data[i+OFFS](9, 0) = track[i].hwEta;
@@ -165,6 +167,7 @@ template<unsigned int N, unsigned int OFFS>
 inline void mp7_pack(MuObj mu[N], MP7DataWord data[]) {
     #pragma HLS inline
     for (unsigned int i = 0; i < N; ++i) {
+        data[i+OFFS] = 0;
         data[i+OFFS](31+32,16+32) = mu[i].hwPtErr;
         data[i+OFFS](15+32, 0+32) = mu[i].hwPt;
         data[i+OFFS](9, 0) = mu[i].hwEta;
@@ -176,6 +179,7 @@ template<unsigned int N, unsigned int OFFS>
 inline void mp7_pack(PFChargedObj pfch[N], MP7DataWord data[]){
     #pragma HLS inline
     for (unsigned int i = 0; i < N; ++i) {
+        data[i+OFFS] = 0;
         data[i+OFFS](18+32, 16+32) = pfch[i].hwId;
         data[i+OFFS](15+32, 0+32) = pfch[i].hwPt;
         data[i+OFFS](9, 0)  = pfch[i].hwEta;
@@ -189,6 +193,7 @@ inline void mp7_pack(PFNeutralObj pfne[N], MP7DataWord data[]) {
     #pragma HLS inline
     for (unsigned int i = 0; i < N; ++i) {
         //data[i+OFFS](18+32, 16+32) = pfne[i].hwId;
+        data[i+OFFS] = 0;
         data[i+OFFS](31+32, 16+32) = pfne[i].hwPtPuppi;
         data[i+OFFS](15+32, 0+32) = pfne[i].hwPt;
         data[i+OFFS](9, 0) = pfne[i].hwEta;
