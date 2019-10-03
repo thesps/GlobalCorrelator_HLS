@@ -5,7 +5,7 @@
 #include <cassert>
 
 MP7PatternSerializer::MP7PatternSerializer(const std::string &fname, unsigned int nmux, int nempty, unsigned int nlinks, const std::string &boardName) :
-    fname_(fname), nlinks_(nlinks ? nlinks : MP7_NCHANN/nmux), nmux_(nmux), nchann_(MP7_NCHANN/nmux), nempty_(std::abs(nempty)), fillmagic_(nempty<0), file_(nullptr), ipattern_(0) 
+    fname_(fname), nlinks_(nlinks ? nlinks : MP7_NCHANN), nmux_(nmux), nchann_(MP7_NCHANN), nempty_(std::abs(nempty)), fillmagic_(nempty<0), file_(nullptr), ipattern_(0) 
 {
   //nmux_=1;//override
     if (!fname.empty()) {
@@ -18,8 +18,9 @@ MP7PatternSerializer::MP7PatternSerializer(const std::string &fname, unsigned in
         fprintf(file_, "\n");
     }
     if (nmux_ > 1) {
-        assert(MP7_NCHANN % nmux_ == 0);
-        buffer_.resize(nmux_);
+        //assert(MP7_NCHANN % nmux_ == 0);
+        //buffer_.resize(nmux_);
+        buffer_.resize(1);
         zero();
     }
     MP7DataWord zero_event[MP7_NCHANN];
@@ -53,7 +54,7 @@ void MP7PatternSerializer::operator()(const MP7DataWord event[MP7_NCHANN])
                 for (unsigned int j = 0; j < MP7_NCHANN; ++j) zero_event[j] = ((ipattern_ << 16) & 0xFFFF0000) | ((iempty << 8) & 0xFF00) | (j & 0xFF);
             }
             if (nmux_ == 1) print(ipattern_, zero_event);
-            else push(zero_event);
+            //else push(zero_event);
             ipattern_++;
         }
     }
@@ -104,13 +105,24 @@ template<typename T> void MP7PatternSerializer::print(unsigned int iframe, const
 }
 void MP7PatternSerializer::push(const MP7DataWord event[MP7_NCHANN])
 {
-    int imux = (ipattern_ % nmux_), offs = imux * nchann_;
+    /*int imux = (ipattern_ % nmux_), offs = imux * nchann_;
     for (unsigned int ic = 0, i = 0; ic < nchann_; ++ic) {
         for (unsigned int im = 0; im < nmux_; ++im, ++i) {
             buffer_[im][offs+ic] = event[i];
         }
     }
-    if (imux == nmux_-1) flush();
+    if (imux == nmux_-1) flush();*/
+    for(unsigned int ic = 0; ic < nchann_; ++ic){
+        buffer_[0][ic] = event[ic];
+    }
+    /*for(unsigned int im = 1; im < nmux_; ++im){
+        for(unsigned int ic = 0; ic < nchann_; ++ic){
+            buffer_[im][ic] = 0;
+        } 
+    }*/
+    //int imux = (ipattern_ % nmux_);
+    //if (imux == nmux_-1) flush();
+    flush();
 }
 /*
 void MP7PatternSerializer::push(const axi_t event[MP7_NCHANN])
