@@ -8,7 +8,7 @@
 #include "utils/pattern_serializer.h"
 #include "utils/test_utils.h"
 
-#define NTEST 312
+#define NTEST 50
 
 
 int main() {
@@ -21,6 +21,7 @@ int main() {
     HadCaloObj calo[NCALO]; EmCaloObj emcalo[NEMCALO]; TkObj track[NTRACK]; z0_t hwZPV;
     HadCaloObj calo_subem[NCALO], calo_subem_ref[NCALO]; 
     MuObj mu[NMU];
+    TkObj evTracks[EVNTRACKS];
 
     // output PF objects
     PFChargedObj outch[NTRACK], outch_ref[NTRACK];
@@ -73,8 +74,9 @@ int main() {
         // get the inputs from the input object
         if (!inputs.nextRegion(calo, emcalo, track, mu, hwZPV)) break;
 
+        inputs.allTracks(evTracks); // This is wasteful, but fine for now
         VtxObj curvtx;    
-        simple_vtx_ref(track,&curvtx);
+        simple_vtx_ref(evTracks,&curvtx);
         printf("Vertex Z   %i\n",(int)(curvtx.hwZ0));
 
         MP7DataWord data_in[MP7_NCHANN], data_out[MP7_NCHANN];

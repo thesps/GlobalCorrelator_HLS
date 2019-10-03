@@ -17,7 +17,12 @@ typedef hls::stream<axi_t> stream_t;
 enum PID { PID_Charged=0, PID_Neutral=1, PID_Photon=2, PID_Electron=3, PID_Muon=4 };
 
 // VERTEXING
-#define NVTXBINS 15
+#define NVTXBINS 256
+#define VTXZMIN -256 // -256 mm
+#define VTXZMAX 256 // +256 mm
+#define VTXHWZMIN -512 // -512 HWU
+#define VTXHWZMAX 512 // +512 HWU
+#define EVNTRACKS 2048 // Just a large number...
 #define NPOW 6
 #define NALLTRACK 1 << NPOW
 #define NSECTOR 1
