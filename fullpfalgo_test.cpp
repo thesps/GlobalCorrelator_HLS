@@ -7,8 +7,9 @@
 #include "utils/DiscretePFInputs_IO.h"
 #include "utils/pattern_serializer.h"
 #include "utils/test_utils.h"
+#include "firmware/emp-vtx_encoding.h"
 
-#define NTEST 50
+#define NTEST 18
 
 
 int main() {
@@ -55,6 +56,8 @@ int main() {
 
     // -----------------------------------------
     // run multiple tests
+    // Crude but simple way to keep track of event changing
+    z0_t lastvtx = 0;
     for (int test = 1; test <= NTEST; ++test) {
 
         // initialize TP objects
@@ -78,6 +81,11 @@ int main() {
         VtxObj curvtx;    
         simple_vtx_ref(evTracks,&curvtx);
         printf("Vertex Z   %i\n",(int)(curvtx.hwZ0));
+        // Write a vertex finder pattern file once per event
+        if(curvtx.hwZ0 != lastvtx){
+            vxf_pattern_file<EVNTRACKS>(evTracks);
+        }
+        lastvtx = curvtx.hwZ0;
 
         MP7DataWord data_in[MP7_NCHANN], data_out[MP7_NCHANN];
         // initialize
@@ -95,13 +103,18 @@ int main() {
 		// for (int ii = 0; ii < 72; ++ii){ std::cout << ii << ", " << data_in[ii] << std::endl; }
 
         for (unsigned int di = 0; di < MP7_NCHANN; di++) {
-            std::cout<< std::setfill('0') << std::setw(8) << std::hex << (unsigned int)(data_out[di]) << "  ";
-            if (di%48==47) std::cout << std::endl;
+            std::cout<< std::setfill('0') << std::setw(16) << std::hex << (unsigned int)(data_in[di]) << "  ";
         }
+        std::cout << std::endl;
+
+        for (unsigned int di = 0; di < MP7_NCHANN; di++) {
+            std::cout<< std::setfill('0') << std::setw(16) << std::hex << (unsigned int)(data_out[di]) << "  ";
+        }
+        std::cout << std::endl;
 
         std::cout<<"\n-----------"<<std::endl;
 
-        unsigned int index = 0;
+        /*unsigned int index = 0;
         for (unsigned int fi = 0; fi < 3; fi++) {
             std::cout << "INPUT 0x" << std::setfill('0') << std::setw(4) << std::hex << 3*(test-1)+fi;
             for (unsigned int ch = 0; ch < 48; ++ch){
@@ -144,7 +157,7 @@ int main() {
             }
             if (fi>0) index = index + 48;
             std::cout << "    " << std::endl;
-        }
+        }*/
 
 
         MP7_REF_FUNC(emcalo, calo, track, mu, outch_ref, outpho_ref, outne_ref, outmupf_ref);

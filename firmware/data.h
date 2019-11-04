@@ -9,6 +9,7 @@ typedef ap_int<10>  etaphi_t;
 typedef ap_int<5>  vtx_t;
 typedef ap_uint<3>  particleid_t;
 typedef ap_int<10> z0_t;  // 40cm / 0.1
+typedef ap_uint<8> vxf_z0_t; // Bin index for Vertex Finder
 typedef ap_uint<14> tk2em_dr_t;
 typedef ap_uint<14> tk2calo_dr_t;
 typedef ap_uint<64> axi_t;
@@ -22,6 +23,8 @@ enum PID { PID_Charged=0, PID_Neutral=1, PID_Photon=2, PID_Electron=3, PID_Muon=
 #define VTXZMAX 256 // +256 mm
 #define VTXHWZMIN -512 // -512 HWU
 #define VTXHWZMAX 512 // +512 HWU
+#define VTXMIN_VXF -150
+#define VTXMAX_VXF 150
 #define EVNTRACKS 2048 // Just a large number...
 #define NPOW 6
 #define NALLTRACK 1 << NPOW
@@ -106,6 +109,11 @@ struct TkObj {
 inline void clear(TkObj & c) {
     c.hwPt = 0; c.hwPtErr = 0; c.hwEta = 0; c.hwPhi = 0; c.hwZ0 = 0; c.hwTightQuality = 0;
 }
+inline vxf_z0_t VxfZ0(TkObj & t){
+    // Convert the PF encoded track to Vertex Finder
+    vxf_z0_t z = (t.hwZ0 - VTXMIN_VXF) * 255. / (VTXMAX_VXF - VTXMIN_VXF);
+    return z;
+}
 
 struct MuObj {
 	pt_t hwPt, hwPtErr;
@@ -140,6 +148,8 @@ struct VtxObj {
 #elif defined(TESTKU15P)
 #define MP7_NCHANN 42
 #endif
+
+#define VTX_NCHANN 27
 
 #define CTP7_NCHANN_IN 67
 #define CTP7_NCHANN_OUT 48

@@ -653,9 +653,12 @@ void mp7wrapped_pack_in(EmCaloObj emcalo[NEMCALO], HadCaloObj hadcalo[NCALO], Tk
     mp7_pack<NTRACK,TKOFFS>(track, data);
     mp7_pack<NMU,MUOFFS>(mu, data);
 #if WORD_FACTOR == 2
-    z0 = 0.5*(data[MP7_NCHANN-1](15, 0) + data[MP7_NCHANN-2](15, 0));
+    //z0 = 0;
+    data[MP7_NCHANN-1](15, 0) = z0;
+    data[MP7_NCHANN-2](15, 0) = z0;
 #elif WORD_FACTOR == 1
-    z0 = data[MP7_NCHANN-1](15, 0);
+    //z0 = 0;
+    data[MP7_NCHANN-1](15, 0) = z0;
 # endif
 }
 
@@ -716,10 +719,10 @@ void mp7wrapped_pack_out_necomb( PFChargedObj pfch[NTRACK], PFNeutralObj pfne_al
     #define PFMUOFFS WORD_FACTOR*NSELCALO+NHOFFS
     mp7_pack<NTRACK,0>(pfch, data);
     mp7_pack<NPHOTON,PHOOFFS>(pfne_all, data);
-    mp7_pack<NSELCALO,NHOFFS>(pfne_all, data);
+    mp7_pack<NSELCALO,NHOFFS>(pfne_all + NPHOTON, data);
     mp7_pack<NMU,PFMUOFFS>(pfmu, data); 
 #if WORD_FACTOR == 1
-    data[MP7_NCHANN-1] = ( MP7DataWord(5), z0 );
+    data[MP7_NCHANN-1] = z0;
 #elif WORD_FACTOR == 2
     data[MP7_NCHANN-2] = z0;
     data[MP7_NCHANN-1] = 5;
@@ -802,7 +805,7 @@ void mp7wrapped_pfalgo3_full(MP7DataWord input[MP7_NCHANN], MP7DataWord output[M
         pfne_all[i+NPHOTON] = pfne[i];
     }
     simple_puppi_hw(pfch, pfne_all, drvals, z0);
-    //mp7wrapped_pack_out_necomb(pfch, pfne_all, pfmu, output,z0);
-    mp7wrapped_pack_out(pfch, pfpho, pfne, pfmu, output, z0);
+    mp7wrapped_pack_out_necomb(pfch, pfne_all, pfmu, output,z0);
+    //mp7wrapped_pack_out(pfch, pfpho, pfne, pfmu, output, z0);
 }
 

@@ -14,7 +14,9 @@ void simple_vtx_ref(TkObj track[NALLTRACK], VtxObj *outvtx) {
   for (int ivtx = 0; ivtx < NVTXBINS; ++ivtx) { vtxbin[ivtx] = 0;  sumbin[ivtx] = 0;}
   //  for(int isec=0; isec < NSECTOR;    isec++) { 
   for(int it=0; it < NALLTRACK; it++) { 
-    int bin = (track[it].hwZ0 - VTXHWZMIN) / ((VTXHWZMAX - VTXHWZMIN) / (NVTXBINS - 1));
+    vxf_z0_t z = VxfZ0(track[it]); 
+    //int bin = (track[it].hwZ0 - VTXHWZMIN) / ((VTXHWZMAX - VTXHWZMIN) / (NVTXBINS - 1));
+    int bin = z;
     //ap_int<5> bin=((track[it].hwZ0))*1./Z0_SCALE*(NVTXBINS/15);
     if(bin < 0)        bin = 0;
     if(bin > NVTXBINS) bin = NVTXBINS;
@@ -27,13 +29,17 @@ void simple_vtx_ref(TkObj track[NALLTRACK], VtxObj *outvtx) {
   outvtx->hwSumPt = 0;
   outvtx->mult    = 0;
   outvtx->hwZ0    = 0;
+  int outbin = 0;
   for(int it=0; it < NVTXBINS; it++) { 
     if(sumbin[it] > outvtx->hwSumPt) { 
       outvtx->hwSumPt = sumbin[it];
       outvtx->mult    = vtxbin[it];
-      outvtx->hwZ0    = it * ((VTXHWZMAX - VTXHWZMIN) / (NVTXBINS - 1)) + VTXHWZMIN;
+      //outvtx->hwZ0    = it * ((VTXHWZMAX - VTXHWZMIN) / (NVTXBINS - 1)) + VTXHWZMIN;
+      outvtx->hwZ0 = it * 300.0 / 255 - 150;
+      outbin = it;
     }
   }
+  std::cout << "VTX iBin = " << outbin << std::endl;
   std::cout << "VTX z0 = " << outvtx->hwZ0 << std::endl;
   outvtx->mult > 3 ? outvtx->hwId = 1 : outvtx->hwId = 0;
 }
