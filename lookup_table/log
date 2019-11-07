@@ -1,0 +1,35 @@
+
+****** Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2018.3 (64-bit)
+  **** SW Build 2405991 on Thu Dec  6 23:36:41 MST 2018
+  **** IP Build 2404404 on Fri Dec  7 01:43:56 MST 2018
+    ** Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+
+source /data/Vivado/2018.3/scripts/vivado_hls/hls.tcl -notrace
+INFO: [HLS 200-10] Running '/data/Vivado/2018.3/bin/unwrapped/lnx64.o/vivado_hls'
+INFO: [HLS 200-10] For user 'gpetrucc' on host 'gpetrucc-vm2.cern.ch' (Linux_x86_64 version 3.10.0-957.21.3.el7.x86_64) on Wed Nov 06 14:18:22 CET 2019
+INFO: [HLS 200-10] On os "CentOS Linux release 7.7.1908 (Core) "
+INFO: [HLS 200-10] In directory '/afs/cern.ch/work/g/gpetrucc/vivado/simple/lookup_table'
+INFO: [HLS 200-10] Opening and resetting project '/afs/cern.ch/work/g/gpetrucc/vivado/simple/lookup_table/proj'.
+INFO: [HLS 200-10] Adding design file 'src/algo.cpp' to the project
+INFO: [HLS 200-10] Adding test bench file 'algo_test.cpp' to the project
+INFO: [HLS 200-10] Adding test bench file 'algo_ref.cpp' to the project
+INFO: [HLS 200-10] Opening and resetting solution '/afs/cern.ch/work/g/gpetrucc/vivado/simple/lookup_table/proj/solution1'.
+INFO: [HLS 200-10] Cleaning up the solution database.
+INFO: [HLS 200-10] Setting target device to 'xcku115-flvf1924-2-i'
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 4.167ns.
+INFO: [SYN 201-201] Setting up clock 'default' with an uncertainty of 1ns.
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+   Compiling ../../../../algo_ref.cpp in debug mode
+   Compiling ../../../../algo_test.cpp in debug mode
+   Compiling ../../../../src/algo.cpp in debug mode
+   Generating csim.exe
+Average MET(int) - MET(flt) =       1.7
+RMS     MET(int) - MET(flt) =       1.6
+Average       MET(flt)          / sqrt(HT) =     7.609
+Average [ MET(int) - MET(flt) ] / sqrt(HT) =     0.097
+RMS     [ MET(int) - MET(flt) ] / sqrt(HT) =     0.089
+Passed all 500 tests
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [Common 17-206] Exiting vivado_hls at Wed Nov  6 14:18:32 2019...
