@@ -38,6 +38,9 @@ class MP7PatternSerializer {
         
         void operator()(const MP7DataWord event[MP7_NCHANN]) ;
         //void process(const axi_t       event[MP7_NCHANN]) ;
+    
+        void push(const MP7DataWord event[MP7_NCHANN]);
+        template<typename T> void print(unsigned int iframe, const T & event, bool zero=false);
         
     protected:
         const std::string fname_;
@@ -57,8 +60,6 @@ class MP7PatternSerializer {
         };
         std::vector<Pattern> buffer_; // for muxing; holds the next patterns in output format. will fill nmux events, first, then print them all out
 
-        template<typename T> void print(unsigned int iframe, const T & event, bool zero=false);
-        void push(const MP7DataWord event[MP7_NCHANN]);
         //void push(const axi_t       event[MP7_NCHANN]);
         void flush();
         void zero();

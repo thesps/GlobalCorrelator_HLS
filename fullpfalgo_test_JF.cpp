@@ -9,13 +9,15 @@
 #include "utils/test_utils.h"
 #include "firmware/emp-vtx_encoding.h"
 
-#define NTEST 54
+#define NTEST 120
+
 
 int main() {
 
     // input format: could be random or coming from simulation
     //RandomPFInputs inputs(37); // 37 is a good random number
-    DiscretePFInputs inputs("regions_TTbar_PU140.dump");
+    //DiscretePFInputs inputs("regions_TTbar_PU140.dump");
+    DiscretePFInputs inputs("barrel_dump.dump");
     
     // input TP objects
     HadCaloObj calo[NCALO]; EmCaloObj emcalo[NEMCALO]; TkObj track[NTRACK]; z0_t hwZPV;
@@ -166,6 +168,15 @@ int main() {
         serInPatterns(data_in); serOutPatterns(data_out);
         serInPatterns2(data_in); serOutPatterns2(data_out);
         serInPatterns3(data_in); serOutPatterns3(data_out);
+        MP7DataWord zero_event[MP7_NCHANN];
+        for (unsigned int j = 0; j < MP7_NCHANN; ++j) zero_event[j] = 0;
+        if(test % 2 == 0){
+            int iZFMax = 12;
+            if(test % 4 == 0){ iZFMax = 14; } // To get II=17 for JF with II2 PF...
+            for(int iZF = 0; iZF < iZFMax; iZF++){
+                serInPatterns.print(0, zero_event, false);
+            }
+        }
 
         // write out human-readable patterns
         serHR(emcalo, calo, track, mu, outch, outpho, outne, outmupf);

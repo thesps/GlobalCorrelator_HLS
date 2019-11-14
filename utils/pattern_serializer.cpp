@@ -257,12 +257,14 @@ void HumanReadablePatternSerializer::dump_outputs(const PFChargedObj outch[NTRAC
                 int(outch[i].hwPt), int(outch[i].hwEta), int(outch[i].hwPhi), int(outch[i].hwId), int(outch[i].hwZ0));
     }
     for (int i = 0; i < NPHOTON; ++i) {
-        fprintf(file_, "   photon  pf %3d, hwPt % 7d   hwEta %+7d   hwPhi %+7d   hwId %1d\n", i,
-                int(outpho[i].hwPt), int(outpho[i].hwEta), int(outpho[i].hwPhi), int(outpho[i].hwId));
+        //fprintf(file_, "   photon  pf %3d, hwPt % 7d   hwEta %+7d   hwPhi %+7d   hwId %1d\n", i,
+        //        int(outpho[i].hwPt), int(outpho[i].hwEta), int(outpho[i].hwPhi), int(outpho[i].hwId));
+        fprintf(file_, "   photon  pf %3d, hwPtPuppi % 7d   hwPt % 7d   hwEta %+7d   hwPhi %+7d   hwId %1d\n", i,
+                int(outpho[i].hwPt), int(outpho[i].hwPtPuppi), int(outpho[i].hwEta), int(outpho[i].hwPhi), int(outpho[i].hwId));
     }
     for (int i = 0; i < NSELCALO; ++i) {
-        fprintf(file_, "   neutral pf %3d, hwPt % 7d   hwEta %+7d   hwPhi %+7d   hwId %1d\n", i,
-                int(outne[i].hwPt), int(outne[i].hwEta), int(outne[i].hwPhi), int(outne[i].hwId));
+        fprintf(file_, "   neutral pf %3d, hwPtPuppi % 7d   hwPt % 7d   hwEta %+7d   hwPhi %+7d   hwId %1d\n", i,
+                int(outne[i].hwPt), int(outne[i].hwPtPuppi), int(outne[i].hwEta), int(outne[i].hwPhi), int(outne[i].hwId));
     }
     for (int i = 0; i < NMU; ++i) {
         fprintf(file_, "   muon    pf %3d, hwPt % 7d   hwEta %+7d   hwPhi %+7d   hwId %1d\n", i,

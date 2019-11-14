@@ -14,8 +14,8 @@ void vtx_pack(TkObj track[N], MP7DataWord data[]){
 }
 
 template<unsigned int N>
-void vxf_pattern_file(TkObj track[N]){
-    MP7PatternSerializer vtxPatterns("vtx_patterns.txt", 1, 0);
+void vxf_pattern_file(MP7PatternSerializer & vtxPatterns, TkObj track[N]){
+    //MP7PatternSerializer vtxPatterns("vtx_patterns.txt", 1, 0);
     // For simplicity, initialise MP7_NCHANN channels
     // But the channels unused by vertexing finder are always 0
     MP7DataWord frame[MP7_NCHANN];
@@ -36,5 +36,13 @@ void vxf_pattern_file(TkObj track[N]){
         }
         vtx_pack<VTX_NCHANN>(trackFrame, frame);
         vtxPatterns(frame);
+    }
+
+    for(int ic = VTX_NCHANN; ic < MP7_NCHANN; ic++){
+        frame[ic] = 0;
+    }
+    // Inter-event gap
+    for(it = 0; it < 40; it++){
+        vtxPatterns.print(0, frame, true);
     }
 }
