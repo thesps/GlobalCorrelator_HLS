@@ -9,9 +9,9 @@ typedef ap_int<10>  etaphi_t;  // 1 unit = 0.01;     max = 5.12
 
 struct Particle {
     pt_t hwPt;
-    etaphi_t hwEta, hwPhi; 
+    etaphi_t hwEta; 
 };
 
-#define NPARTICLES 6
+#define NPARTICLES 20
 
 #endif
