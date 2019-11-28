@@ -12,7 +12,7 @@ int approx_sqrt(int i) {
     return int(std::sqrt(float(i)))*multiplier;
 }
 
-void algo_main_ref(Particle particles[NPARTICLES], pxy_t & met_px, pxy_t & met_py, pt_t & met_pt) {
+void algo_main_ref(const Particle particles[NPARTICLES], pxy_t & met_px, pxy_t & met_py, pt_t & met_pt) {
     int sumpx = 0, sumpy = 0;
     for (unsigned int i = 0; i < NPARTICLES; ++i) {
         float phi = int(particles[i].hwPhi)*0.01f;
@@ -36,7 +36,7 @@ void algo_main_ref(Particle particles[NPARTICLES], pxy_t & met_px, pxy_t & met_p
     met_pt = met << 2;
 }
 
-void algo_main_ref_float(Particle particles[NPARTICLES], pxy_t & met_px, pxy_t & met_py, pt_t & met_pt) {
+void algo_main_ref_float(const Particle particles[NPARTICLES], pxy_t & met_px, pxy_t & met_py, pt_t & met_pt) {
     float sumpx = 0, sumpy = 0;
     for (unsigned int i = 0; i < NPARTICLES; ++i) {
         float phi = int(particles[i].hwPhi)*0.01f, pt = 0.25f*int(particles[i].hwPt);
