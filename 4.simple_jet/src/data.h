@@ -22,7 +22,7 @@ inline void clear(Particle & p) {
 
 struct Jet : public Particle {
     ap_uint<5> iSeed;
-    ap_uint<6> nCand;
+    ap_uint<5> nCand;
 };
 
 inline void clear(Jet & jet) {

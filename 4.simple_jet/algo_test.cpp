@@ -43,6 +43,7 @@ int main() {
         algo_main_ref(particles, ref);
         // check the output
         printf("Event with %d particles (%d truncated away), %d ak4 jets\n", ncands, ntrunk, nak4);
+        bool ok = true;
         for (int i = 0; i < NJETS; ++i) {
             printf("Jet %d:  pt %7.2f  eta %+5.2f  phi %+5.2f  iseed %2d ncand %2d  ",
                     i, jet[i].hwPt * 0.25, jet[i].hwEta * 0.01, jet[i].hwPhi * 0.01, int(jet[i].iSeed), int(jet[i].nCand));
@@ -50,8 +51,11 @@ int main() {
                        ref[i].hwPt * 0.25, ref[i].hwEta * 0.01, ref[i].hwPhi * 0.01, int(ref[i].iSeed), int(ref[i].nCand));
             printf("    ak4 pt %7.2f  eta %+5.2f  phi %+5.2f  ncand %2d\n",
                        ak4[i].hwPt * 0.25, ak4[i].hwEta * 0.01, ak4[i].hwPhi * 0.01, int(ak4[i].nCand));
-
+            if (jet[i].hwPt != ref[i].hwPt || jet[i].hwEta != ref[i].hwEta || jet[i].hwPhi != ref[i].hwPhi || jet[i].nCand != ref[i].nCand) {
+                ok = false;
+            } 
         }
+        if (!ok) { printf("MISMATCH\n"); return 1; }
         printf("\n");
     }
     printf("Passed all %d tests\n", NTEST);

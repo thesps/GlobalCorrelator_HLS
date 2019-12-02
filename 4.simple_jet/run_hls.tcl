@@ -18,6 +18,6 @@ create_clock -period 3.125
 csim_design
 
 # synthethize the algorithm
-#csynth_design
+csynth_design
 
 exit

@@ -18,17 +18,16 @@ An algorithm that computes particle-level jets
 ## Batch mode using Tcl script
 `vivado_hls -f run_hls.tcl`
 
-## Synthesis results (Vivado 2018.3)
+# Some different levels of optimization in the implementation
 
-For the first implementation at II=9, latency 156 clock cycles, 356 DSPs, 78k FFs, 67k LUTs.
+Multiple versions of algo.cpp are committed in the source code 
+* `algo_v0.cpp`: First attempt, with loop-based `find_seed` function to find the seed: At II=2, Latency 162. Resources: 0 BRAMs, 540 DSPs, 119k FFs, 99k LUTs.
 
-## Changing the clock
-
-We can change the clock to 320 MHz (3.125 ns) from the TCL, recreating the project, or in the GUI from the solution settings (golden gear button in the toolbar) and going in the 'Synthesis' page
-
-After this change, the algorithm now takes 2 clock cycles, 227 FFs, 1195 LUTs: the amount of computation resources used is unchanged, but more registers are needed to hold the result in memory during the processing.
-
-One can go to an even faster clock of 400 MHz (2.5 ns), and you'll see a further increase in FFs to 407.
-
-
+* `algo_v1.cpp`: with recursive-template `find_seed` to reduce the latency but with some increase in resources: At II=2, Latency 90, Resources: 0 BRAMs, 540 DSPs, 89k FFs, 140k LUTs.
+* `algo_v4.cpp`: optimization of the implementation: code cleanup, set bit precisions, implement the division with a lookup table (reduce further the latency)
+    * At II=2, Latency 52, Resources: 3 BRAMs, 546 DSPs, 90k FFs, 131k LUTs
+    * At II=1, Latency 52, Resources: 6 BRAMs, 552 DSPs, 119k FFs, 209k LUTs 
+* `algo.cpp` (best version):
+   * Optimized seeding using partial sorting to bring the seed as first element in the list, to reduce the candidates to be evaluated at each step. At II=1, Latency 39, Resources: 6 BRAMs, 489 DSPs, 102k FFs, 78k LUTs
+    
 

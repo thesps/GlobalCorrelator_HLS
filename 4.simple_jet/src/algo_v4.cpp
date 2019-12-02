@@ -6,6 +6,43 @@
 #include <cstdio>
 #endif
 
+
+template<unsigned int N>
+void find_seed_rec(const Particle particles[N], const bool used[N], ap_uint<5> i0, ap_uint<5> & iseed, etaphi_t & seed_eta, etaphi_t & seed_phi, pt_t & seed_pt)
+{
+    ap_uint<5> iseed_up, iseed_down; 
+    etaphi_t seed_eta_up, seed_phi_up, seed_eta_down, seed_phi_down;
+    pt_t seed_pt_up, seed_pt_down;
+    find_seed_rec< N/2 >(&particles[ 0 ], &used[ 0 ], i0+0,   iseed_up,   seed_eta_up,   seed_phi_up,   seed_pt_up);
+    find_seed_rec<N-N/2>(&particles[N/2], &used[N/2], i0+N/2, iseed_down, seed_eta_down, seed_phi_down, seed_pt_down);
+    if (seed_pt_up >= seed_pt_down) {
+        iseed = iseed_up;
+        seed_pt = seed_pt_up;
+        seed_eta = seed_eta_up;
+        seed_phi = seed_phi_up;
+    } else {
+        iseed = iseed_down;
+        seed_pt = seed_pt_down;
+        seed_eta = seed_eta_down;
+        seed_phi = seed_phi_down;
+    }
+
+}
+template<>
+void find_seed_rec<1>(const Particle particles[1], const bool used[1], ap_uint<5> i0, ap_uint<5> & iseed, etaphi_t & seed_eta, etaphi_t & seed_phi, pt_t & seed_pt)
+{
+    seed_pt  = !used[0] ? particles[0].hwPt  : pt_t(0);
+    seed_eta = !used[0] ? particles[0].hwEta : etaphi_t(0);
+    seed_phi = !used[0] ? particles[0].hwPhi : etaphi_t(0);
+    iseed    = !used[0] ? i0                 : ap_uint<5>(0);
+}
+
+bool find_seed(const Particle particles[NPARTICLES], const bool used[NPARTICLES], ap_uint<5> & iseed, etaphi_t & seed_eta, etaphi_t & seed_phi) {
+    pt_t seed_pt;
+    find_seed_rec<NPARTICLES>(particles, used, 0, iseed, seed_eta, seed_phi, seed_pt);
+    return seed_pt > 0;
+}
+
 void _invert_lut_init(ap_uint<18> table[1024]) {
     for (int i = 0; i < 1024; ++i) {
         int val = i > 16 ? (1 << 22)/i : 0; 
@@ -13,7 +50,7 @@ void _invert_lut_init(ap_uint<18> table[1024]) {
         table[i] = val;
     }
 }
-void reconstruct_jet(etaphi_t seed_eta, etaphi_t seed_phi, 
+void reconstruct_jet(bool valid_seed, ap_uint<5> iseed, etaphi_t seed_eta, etaphi_t seed_phi, 
                      ap_uint<15> sum_pt, ap_int<22> sum_pt_eta, ap_int<22> sum_pt_phi, ap_uint<5> count, Jet & jet) {
     ap_uint<18> _inv_table[1024]; _invert_lut_init(_inv_table);
 
@@ -46,7 +83,7 @@ void reconstruct_jet(etaphi_t seed_eta, etaphi_t seed_phi,
         jet.hwEta = jet_eta;
         jet.hwPhi = jet_phi;
         jet.nCand = count;
-        jet.iSeed = 0;
+        jet.iSeed = iseed;
     } else {
         clear(jet);
     }
@@ -76,8 +113,8 @@ void sort_and_crop(const T in[NIn], T out[NOut]) {
     for (int iout = 0; iout < NOut; ++iout) {
         out[iout] = tmp[iout];
     }
-}
 
+}
 
 
 void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
@@ -85,65 +122,45 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     #pragma HLS array_partition variable=jet complete
     #pragma HLS interface ap_none port=jet 
     #pragma HLS pipeline II=1
+    bool used[NPARTICLES];
+    #pragma HLS array_partition variable=used complete
+    for (unsigned int i = 0; i < NPARTICLES; ++i) {
+        used[i] = false;
+    }
 
     Jet myjet[NJETS+MOREJETS];
     #pragma HLS array_partition variable=myjet complete
-    
-    Particle work[NPARTICLES];
-    #pragma HLS array_partition variable=work complete
-
-    for (unsigned int i = 0; i < NPARTICLES; ++i) {
-        work[i] = particles[i];
-    }
 
     for (unsigned int j = 0; j < NJETS+MOREJETS; ++j) {
-        // this block makes sure the highest pt particle of the first NPARTICLES-j is set to index 0
-        for (int stride = 1; stride < NPARTICLES-j; stride = stride + stride) {
-            for (int i = 0; i+stride < NPARTICLES-j; i += (stride<<1)) {
-                Particle a = work[i], b = work[i+stride];
-                if (a.hwPt >= b.hwPt) {
-                    work[i] = a;
-                    work[i+stride] = b;
-                } else {
-                    work[i] = b;
-                    work[i+stride] = a;
-                }
-            }       
-        }
-     
+        bool found = false;
+        ap_uint<5> iseed; etaphi_t seed_eta, seed_phi;
+        found = find_seed(particles, used, iseed, seed_eta, seed_phi);
 #ifndef __SYNTHESIS__
-        //printf("HW algo iter %d: seed %2d of pt %.2f, eta %+.2f, phi %+.2f\n", j, int(-1), work[0].hwPt*0.25, work[0].hwEta*0.01, work[0].hwPhi*0.01);
+        //printf("HW algo iter %d: seed %2d of pt %.2f, valid? %1d\n", j, int(iseed), particles[iseed].hwPt*0.25, int(found));
 #endif
-        // this block builds the jet out of the seed, and zeroes out the used candidates
-        etaphi_t seed_eta = work[0].hwEta, seed_phi = work[0].hwPhi;
-        ap_uint<15> sum_pt = work[0].hwPt; 
+        ap_uint<15> sum_pt = 0; 
         ap_int<22> sum_pt_eta = 0, sum_pt_phi = 0;
-        ap_uint<5> count = (work[0].hwPt > 0) ? 1 : 0;
-        for (unsigned int i = 1; i < NPARTICLES-j; ++i) {
-            int deta = work[i].hwEta - seed_eta;
-            int dphi = work[i].hwPhi - seed_phi;
+        ap_uint<5> count = 0;
+        for (unsigned int i = 0; i < NPARTICLES; ++i) {
+            int deta = particles[i].hwEta - seed_eta;
+            int dphi = particles[i].hwPhi - seed_phi;
             bool incone = deta*deta + dphi*dphi < R2CONE;
-            ap_uint<15> maybePt =  incone ? ap_uint<15>(work[i].hwPt(14,0)) : ap_uint<15>(0);
+            bool addme = found && incone && !used[i];
+            ap_uint<15> maybePt =  addme ? ap_uint<15>(particles[i].hwPt(14,0)) : ap_uint<15>(0);
             sum_pt     += maybePt;
             sum_pt_eta += maybePt * ap_int<7>(deta); // range is bounded since |deta| < 0.04 = 40 units
             sum_pt_phi += maybePt * ap_int<7>(dphi);
+            used[i] = used[i] || addme;
             count += (maybePt > 0);
-            work[i-1].hwPt  = incone ? pt_t(0) : work[i].hwPt;
-            work[i-1].hwEta = work[i].hwEta;
-            work[i-1].hwPhi = work[i].hwPhi;
 #ifndef __SYNTHESIS__
-            //if (incone) printf("                add cand %d, pt %.2f, eta %+.2f, phi %+.2f, cluster pt now %.2f, ncand %d\n", i, work[i].hwPt*0.25, work[i].hwEta*0.01, work[i].hwPhi*0.01,sum_pt*0.25, int(count));
+            //if (addme) printf("                add cand %d, cluster pt now %.2f, ncand %d\n", i, sum_pt*0.25, count);
 #endif
-        } 
-        for (unsigned int i = NPARTICLES-j-1; i < NPARTICLES; ++i) {
-            clear(work[i]);
         }
 #ifndef __SYNTHESIS__
-        //printf("HW algo iter %d: cluster of pt %.2f, ncand %d\n", j, sum_pt*0.25, int(count));
+        //printf("HW algo iter %d: cluster of pt %.2f, ncand %d, valid? %1d\n", j, sum_pt*0.25, count, int(found));
 #endif
-        reconstruct_jet(seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, myjet[j]);
+        reconstruct_jet(found, iseed, seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, myjet[j]);
     }
-
     sort_and_crop<Jet,NJETS+MOREJETS,NJETS>(myjet, jet);
 
 }
