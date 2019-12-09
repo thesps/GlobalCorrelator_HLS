@@ -78,7 +78,40 @@ void sort_and_crop(const T in[NIn], T out[NOut]) {
     }
 }
 
+Particle Max(Particle a, Particle b){
+    return a.hwPt >= b.hwPt ? a : b;
+}
 
+template<int width>
+Particle MaxReduce(const Particle x[width]){
+    // Tree reduce from https://github.com/definelicht/hlslib/blob/master/include/hlslib/xilinx/TreeReduce.h
+    #pragma HLS inline
+    static constexpr int halfWidth = width / 2;
+    static constexpr int reducedSize = halfWidth + width % 2;
+    Particle reduced[reducedSize];
+    #pragma HLS array_partition variable=reduced complete
+    Reduce:
+    for(int i = 0; i < halfWidth; ++i){
+        #pragma HLS unroll
+        reduced[i] = Max(x[i*2], x[i*2 + 1]);
+    }
+    if(halfWidth != reducedSize){
+        reduced[reducedSize - 1] = x[width - 1];
+    }
+    return MaxReduce<reducedSize>(reduced);
+}
+
+template<>
+Particle MaxReduce<2>(const Particle x[2]){
+    #pragma HLS inline
+    return Max(x[0], x[1]);
+}
+
+template<>
+Particle MaxReduce<1>(const Particle x[1]){
+    #pragma HLS inline
+    return x[0];   
+}
 
 void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     #pragma HLS array_partition variable=particles complete
@@ -97,29 +130,21 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     }
 
     for (unsigned int j = 0; j < NJETS+MOREJETS; ++j) {
-        // this block makes sure the highest pt particle of the first NPARTICLES-j is set to index 0
-        for (int stride = 1; stride < NPARTICLES-j; stride = stride + stride) {
-            for (int i = 0; i+stride < NPARTICLES-j; i += (stride<<1)) {
-                Particle a = work[i], b = work[i+stride];
-                if (a.hwPt >= b.hwPt) {
-                    work[i] = a;
-                    work[i+stride] = b;
-                } else {
-                    work[i] = b;
-                    work[i+stride] = a;
-                }
-            }       
-        }
+        // Pick the highest pT particle as the seed
+        Particle seedp = MaxReduce<NPARTICLES>(work);
+        etaphi_t seed_eta = seedp.hwEta, seed_phi = seedp.hwPhi;
+        // Reset seed pT to 0, as it will be clustered from work
+        ap_uint<15> sum_pt = 0;
      
 #ifndef __SYNTHESIS__
         //printf("HW algo iter %d: seed %2d of pt %.2f, eta %+.2f, phi %+.2f\n", j, int(-1), work[0].hwPt*0.25, work[0].hwEta*0.01, work[0].hwPhi*0.01);
 #endif
         // this block builds the jet out of the seed, and zeroes out the used candidates
-        etaphi_t seed_eta = work[0].hwEta, seed_phi = work[0].hwPhi;
-        ap_uint<15> sum_pt = work[0].hwPt; 
+        //etaphi_t seed_eta = work[0].hwEta, seed_phi = work[0].hwPhi;
+        //ap_uint<15> sum_pt = work[0].hwPt; 
         ap_int<22> sum_pt_eta = 0, sum_pt_phi = 0;
-        ap_uint<5> count = (work[0].hwPt > 0) ? 1 : 0;
-        for (unsigned int i = 1; i < NPARTICLES-j; ++i) {
+        ap_uint<5> count = (sum_pt > 0) ? 1 : 0;
+        for (unsigned int i = 0; i < NPARTICLES-j; ++i) {
             int deta = work[i].hwEta - seed_eta;
             int dphi = work[i].hwPhi - seed_phi;
             bool incone = deta*deta + dphi*dphi < R2CONE;
@@ -128,9 +153,9 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
             sum_pt_eta += maybePt * ap_int<7>(deta); // range is bounded since |deta| < 0.04 = 40 units
             sum_pt_phi += maybePt * ap_int<7>(dphi);
             count += (maybePt > 0);
-            work[i-1].hwPt  = incone ? pt_t(0) : work[i].hwPt;
-            work[i-1].hwEta = work[i].hwEta;
-            work[i-1].hwPhi = work[i].hwPhi;
+            work[i].hwPt  = incone ? pt_t(0) : work[i].hwPt;
+            work[i].hwEta = work[i].hwEta;
+            work[i].hwPhi = work[i].hwPhi;
 #ifndef __SYNTHESIS__
             //if (incone) printf("                add cand %d, pt %.2f, eta %+.2f, phi %+.2f, cluster pt now %.2f, ncand %d\n", i, work[i].hwPt*0.25, work[i].hwEta*0.01, work[i].hwPhi*0.01,sum_pt*0.25, int(count));
 #endif

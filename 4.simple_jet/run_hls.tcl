@@ -1,7 +1,7 @@
 # open the project, don't forget to reset
 open_project -reset proj
 set_top algo_main
-add_files src/algo.cpp
+add_files src/algo.cpp -cflags -std=c++0x
 add_files -tb algo_test.cpp 
 add_files -tb algo_ref.cpp
 add_files -tb pfcands_ttbar.txt
