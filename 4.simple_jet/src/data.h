@@ -33,8 +33,8 @@ inline void clear(Jet & jet) {
     jet.nCand = 0;
 }
 
-#define NPARTICLES 30
-#define NJETS 4
+#define NPARTICLES 128
+#define NJETS 8
 #define MOREJETS 2
 
 #define RCONE 40

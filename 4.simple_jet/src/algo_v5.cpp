@@ -160,10 +160,12 @@ void copyOutput(Jet myjet[NJETS], Jet jet[NJETS]){
     }
 }
 
-void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
+void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS+MOREJETS]) {
     #pragma HLS array_partition variable=particles complete
     #pragma HLS array_partition variable=jet complete
     #pragma HLS interface ap_none port=jet 
+	#pragma HLS data_pack variable=particles
+	#pragma HLS data_pack variable=jet
     //#pragma HLS pipeline II=1
 
     Jet myjet[NJETS+MOREJETS];

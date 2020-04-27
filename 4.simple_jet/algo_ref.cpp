@@ -28,6 +28,8 @@ void algo_main_ref(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
                 iseed = i;
             }
         }
+        printf("Seed:  pt %7.2f  eta %+5.2f  phi %+5.2f\n",
+                            iseed, jet[iseed].hwPt * 0.25, jet[iseed].hwEta * 0.01, jet[iseed].hwPhi * 0.01, int(jet[iseed].iSeed), int(jet[iseed].nCand));
         // if not found, stop
         if (iseed == -1) break;
         //printf("Ref algo iter %d: found seed %2d of pt %.2f, eta %+.2f, phi %+.2f\n", j, iseed, particles[iseed].hwPt * 0.25, particles[iseed].hwEta*0.01, particles[iseed].hwPhi*0.01);
