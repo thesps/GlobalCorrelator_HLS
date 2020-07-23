@@ -9,11 +9,17 @@ typedef ap_int<9>    etaphi_t;  // 1 unit = 0.01;     max = +/- 2.55
 // so that there's no need to wrap-aroud the phi coordinate
 
 
-struct Particle {
+class Particle {
+public:
     pt_t hwPt;
     etaphi_t hwEta; 
     etaphi_t hwPhi; 
+
+    bool operator >= (const Particle &b){
+        return hwPt >= b.hwPt;
+    }
 };
+
 inline void clear(Particle & p) {
     p.hwPt = 0;
     p.hwEta = 0;
@@ -34,8 +40,7 @@ inline void clear(Jet & jet) {
 }
 
 #define NPARTICLES 128
-#define NJETS 8
-#define MOREJETS 2
+#define NJETS 12
 
 #define RCONE 40
 #define R2CONE (RCONE*RCONE)
