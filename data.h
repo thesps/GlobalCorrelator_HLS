@@ -41,6 +41,7 @@ inline void clear(Jet & jet) {
 
 #define NPARTICLES 128
 #define NJETS 12
+static const int LOOPII = 18;
 
 #define RCONE 40
 #define R2CONE (RCONE*RCONE)

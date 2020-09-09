@@ -1,9 +1,9 @@
 # open the project, don't forget to reset
-open_project -reset proj
+open_project -reset proj_2020
 set_top algo_main
 add_files seedcone.cpp -cflags -std=c++0x
-add_files -tb algo_test.cpp 
-add_files -tb algo_ref.cpp
+add_files -tb algo_test.cpp -cflags -std=c++0x
+add_files -tb algo_ref.cpp -cflags -std=c++0x
 add_files -tb pfcands_ttbar.txt
 
 # reset the solution
@@ -18,6 +18,6 @@ create_clock -period 3.125
 #csim_design
 
 # synthethize the algorithm
-csynth_design
+#csynth_design
 
 exit

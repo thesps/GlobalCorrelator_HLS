@@ -1,5 +1,5 @@
-#include "src/data.h"
-#include "src/algo.h"
+#include "data.h"
+#include "algo.h"
 #include <cmath>
 
 inline int dR2(const Particle & p1, const Particle &p2) {
@@ -14,12 +14,12 @@ void algo_main_ref(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
         used[i] = false;
     }
 
-    Jet myjet[NJETS+MOREJETS];
-    for (unsigned int j = 0; j < NJETS+MOREJETS; ++j) {
+    Jet myjet[NJETS];
+    for (unsigned int j = 0; j < NJETS; ++j) {
         clear(myjet[j]);
     }
 
-    for (unsigned int j = 0; j < NJETS+MOREJETS; ++j) {
+    for (unsigned int j = 0; j < NJETS; ++j) {
         // find a seed
         int iseed = -1;
         for (unsigned int i = 0; i < NPARTICLES; ++i) {
@@ -69,8 +69,8 @@ void algo_main_ref(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     }
 
     // sort the jets
-    for (unsigned int j = 0; j < NJETS+MOREJETS; ++j) {
-        for (unsigned int j2 = j+1; j2 < NJETS+MOREJETS; ++j2) {
+    for (unsigned int j = 0; j < NJETS; ++j) {
+        for (unsigned int j2 = j+1; j2 < NJETS; ++j2) {
             if (myjet[j2].hwPt > myjet[j].hwPt) {
                 std::swap(myjet[j], myjet[j2]);
             }

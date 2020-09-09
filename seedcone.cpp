@@ -2,10 +2,13 @@
 #include "TreeReduce.h"
 #include <cmath>
 #include <cassert>
+#include "hls_stream.h"
+#include "data.h"
 
 #ifndef __SYNTHESIS__
 #include <cstdio>
 #endif
+
 
 void _invert_lut_init(ap_uint<18> table[1024]) {
     for (int i = 0; i < 1024; ++i) {
@@ -169,6 +172,185 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     }
 
     copyOutput(myjet, jet);
+}
+
+void jetLoopBody(Particle work[NPARTICLES], Jet myjet[NJETS]){
+	#pragma HLS array_partition variable=myjet complete
+
+	#pragma HLS pipeline II=LOOPII
+	Jet currentJet;
+	Particle seedp;
+	etaphi_t seed_eta, seed_phi;
+	ap_uint<15> sum_pt;
+	ap_int<22> sum_pt_eta, sum_pt_phi;
+	ap_uint<5> count;
+
+	bool incone [NPARTICLES];
+	#pragma HLS array_partition variable=incone complete
+
+	findSeed(work, seedp, seed_eta, seed_phi);
+	formJet(work, incone, seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count);
+	updateAxis(seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, currentJet);
+	updateWork(work, incone);
+	addJetPtSorted(currentJet, myjet);
+}
+
+void iterate0(Particle inParticles[NPARTICLES], Jet outJets[NJETS]){
+	Particle workParticles[LOOPII][NPARTICLES];
+	Jet workJets[NJETS];
+
+	#pragma HLS array_partition variable=inParticles complete
+	#pragma HLS array_partition variable=outJets complete
+	#pragma HLS array_partition variable=workParticles complete
+	#pragma HLS array_partition variable=workJets complete
+
+	JetsLoop:
+	for(int i = 0; i < NJETS; i++){
+		#pragma HLS pipeline
+		IILOOP:
+		for(int j = 0; j < LOOPII; j++){
+			Particle loopWorkParticles[NPARTICLES];
+			#pragma HLS array_partition variable=loopWorkParticles complete
+			for(int k = 0; k < NPARTICLES; k++){
+				#pragma HLS unroll
+				loopWorkParticles[k] = (i == 0) ? inParticles[k] : workParticles[j][k];
+			}
+
+			jetLoopBody(loopWorkParticles, workJets);
+
+			if(i < NJETS-1){
+				for(int k = 0; k < NPARTICLES; k++){
+					#pragma HLS unroll
+					workParticles[j][k] = loopWorkParticles[k];
+				}
+			}else{
+				for(int k = 0; k < NJETS; k++){
+					#pragma HLS unroll
+					outJets[k] = workJets[k];
+				}
+			}
+		}
+	}
+
+}
+
+void iterate(hls::stream<bool> &reset, hls::stream<bool> &newInput, hls::stream<Particle> inParticles[NPARTICLES], hls::stream<Jet> outJets[NJETS]){
+	#pragma HLS pipeline II=1
+	#pragma HLS array_partition variable=inParticles complete
+	#pragma HLS array_partition variable=outJets complete
+	//static const int LOOPII=16;
+
+	static Particle workParticles[LOOPII][NPARTICLES];
+	static Particle tmp[NPARTICLES];
+	static Particle store[NPARTICLES];
+	static Jet workJets[LOOPII][NJETS];
+	static Jet tmpJets[NJETS];
+	#pragma HLS array_partition variable=workParticles complete
+	#pragma HLS array_partition variable=tmp complete
+	#pragma HLS array_partition variable=store complete
+	#pragma HLS array_partition variable=workJets complete
+
+	// Control signals
+	static int nJetsDone[LOOPII];
+	static bool working[LOOPII];
+	static bool newIn[LOOPII];
+	static int phase = 0;
+	static bool newInputData = false;
+	static bool resetData = false;
+
+	MainLoop:
+	//while(!resetData){
+	for(int nEv = 0; nEv < 2; nEv++){
+		#pragma HLS pipeline II=1 rewind
+
+		// Input section
+		// Read the input streams
+		newInput.read_nb(newInputData);
+		for(int i = 0; i < NPARTICLES; i++){
+			inParticles[i].read_nb(tmp[i]);
+		}
+
+		// If the input is valid, copy it to the internal registers to wait for a slot in the algo loop pipeline
+		if(newInputData){
+			for(int i = 0; i < NPARTICLES; i++){
+				store[i] = tmp[i];
+			}
+		}
+
+		// Only copy from the store array to work when that slot is not in use
+		// Rate of data in should be low enough that tmp is never clobbered
+		if(!working[phase]){
+			for(int i = 0; i < NPARTICLES; i++){
+				workParticles[phase][i].hwPt = tmp[i].hwPt;
+				workParticles[phase][i].hwEta = tmp[i].hwEta;
+				workParticles[phase][i].hwPhi = tmp[i].hwPhi;
+
+			}
+		}
+
+		// Signal that there's new input
+		if(newInputData && !working[phase]){
+			newIn[phase] = true;
+		}else{
+			newIn[phase] = false;
+		}
+
+		// Algorithm section
+		jetLoopBody(workParticles[phase], workJets[phase]);
+
+		// Control section
+		reset.read_nb(resetData);
+		bool workingN = working[phase];
+		working[phase] = newIn[phase] || (workingN && nJetsDone[phase] < NJETS);
+		int nJetsDoneN = nJetsDone[phase];
+		nJetsDone[phase] = workingN ? nJetsDoneN + 1 : 0;
+
+		// Output section
+		if(nJetsDoneN == NJETS){
+			for(int i = 0; i < NJETS; i++){
+				#pragma HLS unroll
+				tmpJets[i] = workJets[phase][i];
+				outJets[i].write_nb(tmpJets[i]);
+			}
+		}
+
+		phase = phase >= LOOPII ? 0 : phase + 1;
+	}
+
+
+}
+
+void multipleEvents(hls::stream<bool> newInput, hls::stream<Particle> inParticles[NPARTICLES], hls::stream<Jet> outJets[NJETS]){
+	#pragma HLS pipeline II=1
+	static const int NEVENTS_INFLIGHT = 6;
+	Particle workParticles[NEVENTS_INFLIGHT][NPARTICLES];
+	Particle tmpParticles[NPARTICLES];
+	Jet tmpJets[NEVENTS_INFLIGHT][NJETS];
+	#pragma HLS array_partition variable=inParticles complete
+	#pragma HLS array_partition variable=workParticles dim=1 complete
+	#pragma HLS array_partition variable=tmpParticles dim=0 complete
+	#pragma HLS array_partition variable=tmpJets dim=1 complete
+	#pragma HLS array_partition variable=outJets complete
+
+	bool newIn;
+	int iEvt = 0;
+
+	while(true){
+		newInput.read_nb(newIn);
+		if(newIn){
+			for(int np = 0; np < NPARTICLES; np++){
+				#pragma HLS unroll
+				inParticles[np].read_nb(tmpParticles[np]);
+			}
+			iEvt++;
+		}
+
+		ProcessLoop:
+		for(int NEVT = 0; NEVT < NEVENTS_INFLIGHT; NEVT++){
+			#pragma HLS pipeline II=1
+			algo_main(workParticles[NEVT], tmpJets[NEVT]);
+		}
+	}
 }
 
 
