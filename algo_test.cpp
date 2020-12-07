@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
-#include "src/algo.h"
+#include <iostream>
+#include "algo.h"
 
 #define NTEST 6
 
@@ -21,17 +22,17 @@ int main() {
         for (int i = 0; i < ncands; ++i) {
             if (fscanf(dump, "   cand pt %f eta %f phi %f  id %d", &pt, &eta, &phi, &id) != 4) return 2;
             if (i < NPARTICLES) {
-                particles[i].hwPt =  int(pt/0.25 + 0.49999);
-                particles[i].hwEta = int(eta/0.01);
-                particles[i].hwPhi = int(phi/0.01);
+                particles[i].hwPt =  pt; //int(pt/0.25 + 0.49999);
+                particles[i].hwEta = (eta * 100 / 128); //int(eta/0.01);
+                particles[i].hwPhi = (phi * 100 / 128); //int(phi/0.01);
             } else { ntrunk++; }
         }
         for (int i = 0; i < nak4; ++i) {
             if (fscanf(dump, "   jet  pt %f eta %f phi %f  constituents %d", &pt, &eta, &phi, &id) != 4) return 2;
             if (i < NJETS) {
-                ak4[i].hwPt =  int(pt/0.25 + 0.49999);
-                ak4[i].hwEta = int(eta/0.01);
-                ak4[i].hwPhi = int(phi/0.01);
+                ak4[i].hwPt =  pt; //int(pt/0.25 + 0.49999);
+                ak4[i].hwEta = (eta * 100 / 128); //int(eta/0.01);
+                ak4[i].hwPhi = (phi * 100 / 128); //int(phi/0.01);
                 ak4[i].iSeed = 0;
                 ak4[i].nCand = id;
             }
@@ -45,12 +46,15 @@ int main() {
         printf("Event with %d particles (%d truncated away), %d ak4 jets\n", ncands, ntrunk, nak4);
         bool ok = true;
         for (int i = 0; i < NJETS; ++i) {
-            printf("Jet %d:  pt %7.2f  eta %+5.2f  phi %+5.2f  iseed %2d ncand %2d  ",
-                    i, jet[i].hwPt * 0.25, jet[i].hwEta * 0.01, jet[i].hwPhi * 0.01, int(jet[i].iSeed), int(jet[i].nCand));
-            printf("    ref pt %7.2f  eta %+5.2f  phi %+5.2f  iseed %2d ncand %2d",
-                       ref[i].hwPt * 0.25, ref[i].hwEta * 0.01, ref[i].hwPhi * 0.01, int(ref[i].iSeed), int(ref[i].nCand));
-            printf("    ak4 pt %7.2f  eta %+5.2f  phi %+5.2f  ncand %2d\n",
-                       ak4[i].hwPt * 0.25, ak4[i].hwEta * 0.01, ak4[i].hwPhi * 0.01, int(ak4[i].nCand));
+            std::cout << "Jet    HW:" << i << ": pt " << jet[i].hwPt << " eta " << 
+                jet[i].hwEta << " phi " << jet[i].hwPhi << " iseed " << jet[i].iSeed << " ncand " <<
+                jet[i].nCand << std::endl;
+            /*std::cout << "      ref:" << i << ": pt " << ref[i].hwPt << " eta " << 
+                ref[i].hwEta << " phi " << ref[i].hwPhi << " iseed " << ref[i].iSeed << " ncand " <<
+                ref[i].nCand << std::endl;*/
+            std::cout << "      ak4:" << i << ": pt " << ak4[i].hwPt << " eta " << 
+                ak4[i].hwEta << " phi " << ak4[i].hwPhi << " iseed " << ak4[i].iSeed << " ncand " <<
+                ak4[i].nCand << std::endl;
             if (jet[i].hwPt != ref[i].hwPt || jet[i].hwEta != ref[i].hwEta || jet[i].hwPhi != ref[i].hwPhi || jet[i].nCand != ref[i].nCand) {
                 ok = false;
             } 

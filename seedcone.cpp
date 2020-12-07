@@ -2,41 +2,75 @@
 #include "TreeReduce.h"
 #include <cmath>
 #include <cassert>
+#include <hls_math.h>
+#include <iostream>
 
 #ifndef __SYNTHESIS__
 #include <cstdio>
 #endif
 
-void _invert_lut_init(ap_uint<18> table[1024]) {
-    for (int i = 0; i < 1024; ++i) {
-        int val = i > 16 ? (1 << 22)/i : 0; 
-        assert(val >= 0 && val < (1 << 18));
-        table[i] = val;
+template<class data_T, int N>
+inline float real_val_from_idx(unsigned i){
+    // Treat the index as the top N bits
+    static constexpr int NB = ceillog2(N); // number of address bits for table
+    data_T x(0);
+    x(x.width-1, x.width-NB) = i;
+    return (float) x;
+}
+
+template<class data_T, int N>
+inline unsigned idx_from_real_val(data_T x){
+    // Slice the top N bits to get an index into the table
+    static constexpr int NB = ceillog2(N); // number of address bits for table
+    ap_uint<NB> y = x(x.width-1, x.width-NB); // slice the top N bits of input
+    return (unsigned) y(NB-1, 0);
+}
+
+template<class data_T, class table_T, int N>
+void init_invert_table(table_T table_out[N]){
+    // The template data_T is the data type used to address the table
+    for(unsigned i = 0; i < N; i++){
+        float x = real_val_from_idx<data_T, N>(i);
+        table_T inv_x = 1 / x;
+        table_out[i] = inv_x;
     }
 }
 
-void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
-                     ap_uint<15> sum_pt, ap_int<22> sum_pt_eta, ap_int<22> sum_pt_phi, ap_uint<5> count, Jet & jet) {
-    ap_uint<18> _inv_table[1024]; _invert_lut_init(_inv_table);
-
-    ap_uint<10> den; ap_int<17> num_eta, num_phi;
-    if (sum_pt[14] || sum_pt[13] || sum_pt[12]) { // sum_pt > 4*1024
-        den     = sum_pt >> 5;
-        num_eta = sum_pt_eta >> 5;
-        num_phi = sum_pt_phi >> 5;
-    } else if (sum_pt[11] || sum_pt[10]) {
-        den     = sum_pt >> 2;
-        num_eta = sum_pt_eta >> 2;
-        num_phi = sum_pt_phi >> 2;
-    } else {
-        den     = sum_pt;
-        num_eta = sum_pt_eta;
-        num_phi = sum_pt_phi;
+template<class in_t, class table_t, int N>
+table_t invert_with_shift(in_t in, table_t inv_table[N]){
+    // find the first '1' in the denominator
+    int msb = 0;
+    for(int b = 0; b < in.width; b++){
+        #pragma HLS unroll
+        if(in[b]) msb = b;
     }
-    assert((sum_pt < JET_PT_CUT) || den > 16);
-    ap_uint<18> inv_den = _inv_table[den];
-    etaphi_t jet_eta = seed_eta + etaphi_t((num_eta * inv_den) >> 22);
-    etaphi_t jet_phi = seed_phi + etaphi_t((num_phi * inv_den) >> 22);
+    // shift up the denominator such that the left-most bit (msb) is '1'
+    in_t in_shifted = in << (in.width-msb-1);
+    // lookup the inverse of the shifted input
+    int idx = idx_from_real_val<in_t,N>(in_shifted);
+    table_t inv_in = inv_table[idx];
+    // shift the output back
+    table_t out = inv_in << (in.width-msb-1);
+#ifndef __SYNTHESIS__
+    std::cout << "           x " << in << ", msb = " << msb << ", shift = " << (in.width-msb) << std::endl;
+    std::cout << "     pre 1 / " << in_shifted << " = " << inv_in << "(" << 1/(float)in_shifted << ")" << std::endl;
+    std::cout << "    post 1 / " << in << " = " << out << "(" << 1/(float)in << ")" << std::endl;
+#endif 
+    return out;
+}
+
+void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
+                     pt_t sum_pt, pt_etaphi_t sum_pt_eta, pt_etaphi_t sum_pt_phi, count_t count, Jet & jet) {
+    inv_pt_t inv_table[N_table_inv_pt];
+    init_invert_table<pt_t, inv_pt_t, N_table_inv_pt>(inv_table);
+    inv_pt_t inv_pt = invert_with_shift<pt_t, inv_pt_t, N_table_inv_pt>(sum_pt, inv_table);
+    
+    etaphi_t jet_eta = seed_eta + etaphi_t(sum_pt_eta * inv_pt);
+    etaphi_t jet_phi = seed_phi + etaphi_t(sum_pt_phi * inv_pt);
+#ifndef __SYNTHESIS__
+    std::cout << " uncorr eta: " << seed_eta << ", phi: " << seed_phi << std::endl;
+    std::cout << "   corr eta: " << jet_eta << ", phi: " << jet_phi << std::endl;
+#endif
     bool fiducial = (sum_pt >= JET_PT_CUT) &&
         (-FIDUCIAL_ETA_PHI <= jet_eta && jet_eta <= FIDUCIAL_ETA_PHI) &&
         (-FIDUCIAL_ETA_PHI <= jet_phi && jet_phi <= FIDUCIAL_ETA_PHI);
@@ -71,7 +105,11 @@ void addJetPtSorted(const Jet currentJet, Jet myjet[NJETS]){
     }
 }
 
-void formJet(Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_eta, etaphi_t seed_phi, ap_uint<15> & sum_pt, ap_int<22> & sum_pt_eta, ap_int<22> & sum_pt_phi, ap_uint<5> & count){
+void formJet(Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_eta, etaphi_t seed_phi, pt_t & sum_pt, pt_etaphi_t & sum_pt_eta, pt_etaphi_t & sum_pt_phi, count_t & count){
+
+#ifndef __SYNTHESIS__
+    std::cout << " Seed: pt " << sum_pt << ", eta: " << seed_eta << ", phi: " << seed_phi << std::endl;
+#endif
 	#pragma HLS pipeline
     // this block builds the jet out of the seed, and marks the used candidates
     // Reset seed pT to 0, as it will be clustered from work
@@ -80,14 +118,24 @@ void formJet(Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_e
     JetsLoopParticleLoop:
     for (unsigned int i = 0; i < NPARTICLES; ++i) {
         #pragma HLS unroll
-        int deta = work[i].hwEta - seed_eta;
-        int dphi = work[i].hwPhi - seed_phi;
+        detaphi_t deta = work[i].hwEta - seed_eta;
+        detaphi_t dphi = work[i].hwPhi - seed_phi;
+        // phi wrap
+        detaphi_t dphi0 = dphi > PI ? (detaphi_t) (TWOPI - dphi) : (detaphi_t) dphi;
+        detaphi_t dphi1 = dphi < -PI ? (detaphi_t) (TWOPI + dphi) : (detaphi_t) dphi;
+        dphi = dphi > 0 ? dphi0 : dphi1;
         incone[i] = deta*deta + dphi*dphi < R2CONE;
-        ap_uint<15> maybePt =  incone[i] ? ap_uint<15>(work[i].hwPt(14,0)) : ap_uint<15>(0);
+        pt_t maybePt =  incone[i] ? work[i].hwPt : pt_t(0);
         sum_pt     += maybePt;
-        sum_pt_eta += maybePt * ap_int<7>(deta); // range is bounded since |deta| < 0.04 = 40 units
-        sum_pt_phi += maybePt * ap_int<7>(dphi);
+        sum_pt_eta += maybePt * detaphi_t(deta); // range is bounded since |deta| < 0.04 = 40 units
+        sum_pt_phi += maybePt * detaphi_t(dphi);
         count += (maybePt > 0);
+#ifndef __SYNTHESIS__
+        if(incone[i]){
+            std::cout << " part: pt " << maybePt << ", eta: " << work[i].hwEta << ", phi: " << work[i].hwPhi << std::endl;
+            std::cout << "    d: deta: " << deta << ", dphi: " << dphi << std::endl;
+        }
+#endif
     }
 }
 
@@ -157,9 +205,9 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
         Jet currentJet;
 		Particle seedp;
 		etaphi_t seed_eta, seed_phi;
-		ap_uint<15> sum_pt;
-		ap_int<22> sum_pt_eta, sum_pt_phi;
-		ap_uint<5> count;
+		pt_t sum_pt;
+		pt_etaphi_t sum_pt_eta, sum_pt_phi;
+		count_t count;
 
 		findSeed(work, seedp, seed_eta, seed_phi);
 		formJet(work, incone, seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count);

@@ -2,11 +2,26 @@
 #define ALGO_DATA_H
 
 #include "ap_int.h"
+#include "ap_fixed.h"
 
-typedef ap_uint<16>  pt_t;      // 1 unit = 0.25 GeV; max = 16 TeV
-typedef ap_int<9>    etaphi_t;  // 1 unit = 0.01;     max = +/- 2.55
-// we're assuming anyway that all the particles are in a region of smallish size,
-// so that there's no need to wrap-aroud the phi coordinate
+typedef ap_ufixed<16,14>  pt_t;      // 1 unit = 0.25 GeV; max = 16 TeV
+typedef ap_fixed<10,4>    etaphi_t;   // 1 unit = 0.01;     max = +/- 5.12
+typedef ap_fixed<11,5>    detaphi_t;  // 1 unit = 0.01;     max = +/- 10.24 
+typedef ap_fixed<22,16> pt_etaphi_t; // type for product of pt with eta or phi
+typedef ap_uint<5> count_t; // type for multiplicity
+
+// constants for the axis update
+typedef ap_ufixed<18,-2> inv_pt_t;
+static constexpr int N_table_inv_pt = 1024;
+
+static const detaphi_t TWOPI = 3.14159 * 0.78125 * 2; // 0.78125 is 100 / 128
+static const detaphi_t PI = 3.14159 * 0.78125; // 0.78125 is 100 / 128
+static const detaphi_t HALFPI = 3.14159 * 0.78125 / 2; // 0.78125 is 100 / 128
+static const detaphi_t RCONE = 0.4 * 100 / 128;
+static const detaphi_t R2CONE = RCONE * RCONE;
+
+static const etaphi_t FIDUCIAL_ETA_PHI = 5.11 * 100 / 128;
+static const pt_t JET_PT_CUT = 5;
 
 
 class Particle {
@@ -28,7 +43,7 @@ inline void clear(Particle & p) {
 
 struct Jet : public Particle {
     ap_uint<5> iSeed;
-    ap_uint<5> nCand;
+    count_t nCand;
 };
 
 inline void clear(Jet & jet) {
@@ -42,10 +57,10 @@ inline void clear(Jet & jet) {
 #define NPARTICLES 128
 #define NJETS 12
 
-#define RCONE 40
-#define R2CONE (RCONE*RCONE)
+//#define RCONE 40
+//#define R2CONE (RCONE*RCONE)
 
-#define JET_PT_CUT 100
-#define FIDUCIAL_ETA_PHI 125
+//#define JET_PT_CUT 20
+//#define FIDUCIAL_ETA_PHI 511
 
 #endif
