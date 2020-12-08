@@ -38,6 +38,7 @@ void init_invert_table(table_T table_out[N]){
 
 template<class in_t, class table_t, int N>
 table_t invert_with_shift(in_t in, table_t inv_table[N]){
+
     // find the first '1' in the denominator
     int msb = 0;
     for(int b = 0; b < in.width; b++){
@@ -62,7 +63,15 @@ table_t invert_with_shift(in_t in, table_t inv_table[N]){
 void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
                      pt_t sum_pt, pt_etaphi_t sum_pt_eta, pt_etaphi_t sum_pt_phi, count_t count, Jet & jet) {
     inv_pt_t inv_table[N_table_inv_pt];
-    init_invert_table<pt_t, inv_pt_t, N_table_inv_pt>(inv_table);
+#ifdef __HLS_SYN__
+    bool initialized = false;
+#else
+    static bool initialized = false;
+#endif
+    if (!initialized) {
+        init_invert_table<pt_t, inv_pt_t, N_table_inv_pt>(inv_table);
+        initialized = true;
+    }
     inv_pt_t inv_pt = invert_with_shift<pt_t, inv_pt_t, N_table_inv_pt>(sum_pt, inv_table);
     
     etaphi_t jet_eta = seed_eta + etaphi_t(sum_pt_eta * inv_pt);
@@ -107,10 +116,17 @@ void addJetPtSorted(const Jet currentJet, Jet myjet[NJETS]){
 
 void formJet(Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_eta, etaphi_t seed_phi, pt_t & sum_pt, pt_etaphi_t & sum_pt_eta, pt_etaphi_t & sum_pt_phi, count_t & count){
 
+	#pragma HLS pipeline
 #ifndef __SYNTHESIS__
     std::cout << " Seed: pt " << sum_pt << ", eta: " << seed_eta << ", phi: " << seed_phi << std::endl;
 #endif
-	#pragma HLS pipeline
+    pt_t sum_pts[NPARTICLES];
+    pt_etaphi_t sum_pt_etas[NPARTICLES];
+    pt_etaphi_t sum_pt_phis[NPARTICLES];
+	#pragma HLS array_partition variable=sum_pts complete
+	#pragma HLS array_partition variable=sum_pt_etas complete
+	#pragma HLS array_partition variable=sum_pt_phis complete
+
     // this block builds the jet out of the seed, and marks the used candidates
     // Reset seed pT to 0, as it will be clustered from work
 	sum_pt = 0; sum_pt_eta = 0; sum_pt_phi = 0;
@@ -123,12 +139,12 @@ void formJet(Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_e
         // phi wrap
         detaphi_t dphi0 = dphi > PI ? (detaphi_t) (TWOPI - dphi) : (detaphi_t) dphi;
         detaphi_t dphi1 = dphi < -PI ? (detaphi_t) (TWOPI + dphi) : (detaphi_t) dphi;
-        dphi = dphi > 0 ? dphi0 : dphi1;
-        incone[i] = deta*deta + dphi*dphi < R2CONE;
+        detaphi_t dphiw = dphi > 0 ? dphi0 : dphi1;
+        incone[i] = deta*deta + dphiw*dphiw < R2CONE;
         pt_t maybePt =  incone[i] ? work[i].hwPt : pt_t(0);
-        sum_pt     += maybePt;
-        sum_pt_eta += maybePt * detaphi_t(deta); // range is bounded since |deta| < 0.04 = 40 units
-        sum_pt_phi += maybePt * detaphi_t(dphi);
+        sum_pts[i]    = maybePt;
+        sum_pt_etas[i] = maybePt * (detaphi_t)deta; // range is bounded since |deta| < 0.04 = 40 units
+        sum_pt_phis[i] = maybePt * (detaphi_t)dphiw;
         count += (maybePt > 0);
 #ifndef __SYNTHESIS__
         if(incone[i]){
@@ -137,6 +153,12 @@ void formJet(Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_e
         }
 #endif
     }
+    // sum the in-cone pt and pt-weighted delta-eta, delta-phis
+    Op_add<pt_t> op_add_pt;
+    sum_pt = reduce<pt_t, NPARTICLES, Op_add<pt_t>>(sum_pts, op_add_pt);
+    Op_add<pt_etaphi_t> op_add_etaphi;
+    sum_pt_eta = reduce<pt_etaphi_t, NPARTICLES, Op_add<pt_etaphi_t>>(sum_pt_etas, op_add_etaphi);
+    sum_pt_phi = reduce<pt_etaphi_t, NPARTICLES, Op_add<pt_etaphi_t>>(sum_pt_phis, op_add_etaphi);
 }
 
 void findSeed(Particle work[NPARTICLES], Particle & seedp, etaphi_t & seed_eta, etaphi_t & seed_phi){
