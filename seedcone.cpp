@@ -14,7 +14,10 @@ inline float real_val_from_idx(unsigned i){
     // Treat the index as the top N bits
     static constexpr int NB = ceillog2(N); // number of address bits for table
     data_T x(0);
-    x(x.width-1, x.width-NB) = i;
+    // The MSB of 1 is implicit in the table
+    x[x.width-1] = 1;
+    // So we can use the next NB bits for real data
+    x(x.width-2, x.width-NB-1) = i;
     return (float) x;
 }
 
@@ -22,7 +25,9 @@ template<class data_T, int N>
 inline unsigned idx_from_real_val(data_T x){
     // Slice the top N bits to get an index into the table
     static constexpr int NB = ceillog2(N); // number of address bits for table
-    ap_uint<NB> y = x(x.width-1, x.width-NB); // slice the top N bits of input
+    // Slice the top-1 NB bits of the value
+    // the MSB of '1' is implicit, so only slice below that
+    ap_uint<NB> y = x(x.width-2, x.width-NB-1);
     return (unsigned) y(NB-1, 0);
 }
 
