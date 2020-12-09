@@ -37,7 +37,9 @@ void init_invert_table(table_T table_out[N]){
 }
 
 template<class in_t, class table_t, int N>
-table_t invert_with_shift(in_t in, table_t inv_table[N]){
+table_t invert_with_shift(in_t in){
+    table_t inv_table[N];
+    init_invert_table<in_t, table_t, N>(inv_table);
 
     // find the first '1' in the denominator
     int msb = 0;
@@ -53,7 +55,7 @@ table_t invert_with_shift(in_t in, table_t inv_table[N]){
     // shift the output back
     table_t out = inv_in << (in.width-msb-1);
 #ifndef __SYNTHESIS__
-    std::cout << "           x " << in << ", msb = " << msb << ", shift = " << (in.width-msb) << std::endl;
+    std::cout << "           x " << in << ", msb = " << msb << ", shift = " << (in.width-msb) << ", idx = " << idx << std::endl;
     std::cout << "     pre 1 / " << in_shifted << " = " << inv_in << "(" << 1/(float)in_shifted << ")" << std::endl;
     std::cout << "    post 1 / " << in << " = " << out << "(" << 1/(float)in << ")" << std::endl;
 #endif 
@@ -62,17 +64,7 @@ table_t invert_with_shift(in_t in, table_t inv_table[N]){
 
 void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
                      pt_t sum_pt, pt_etaphi_t sum_pt_eta, pt_etaphi_t sum_pt_phi, count_t count, Jet & jet) {
-    inv_pt_t inv_table[N_table_inv_pt];
-#ifdef __HLS_SYN__
-    bool initialized = false;
-#else
-    static bool initialized = false;
-#endif
-    if (!initialized) {
-        init_invert_table<pt_t, inv_pt_t, N_table_inv_pt>(inv_table);
-        initialized = true;
-    }
-    inv_pt_t inv_pt = invert_with_shift<pt_t, inv_pt_t, N_table_inv_pt>(sum_pt, inv_table);
+    inv_pt_t inv_pt = invert_with_shift<pt_t, inv_pt_t, N_table_inv_pt>(sum_pt);
     
     etaphi_t jet_eta = seed_eta + etaphi_t(sum_pt_eta * inv_pt);
     etaphi_t jet_phi = seed_phi + etaphi_t(sum_pt_phi * inv_pt);
@@ -207,8 +199,8 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     #pragma HLS array_partition variable=particles complete
     #pragma HLS array_partition variable=jet complete
     #pragma HLS interface ap_none port=jet 
-	#pragma HLS data_pack variable=particles
-	#pragma HLS data_pack variable=jet
+    #pragma HLS data_pack variable=particles
+    #pragma HLS data_pack variable=jet
 
     Jet myjet[NJETS];
     #pragma HLS array_partition variable=myjet complete
@@ -219,26 +211,24 @@ void algo_main(const Particle particles[NPARTICLES], Jet jet[NJETS]) {
     copyInput(particles, work);
 
     bool incone [NPARTICLES];
-	#pragma HLS array_partition variable=incone complete
+    #pragma HLS array_partition variable=incone complete
 
     JetsLoop:
     for (unsigned int j = 0; j < NJETS; ++j) {
-		#pragma HLS pipeline
+        #pragma HLS pipeline
         Jet currentJet;
-		Particle seedp;
-		etaphi_t seed_eta, seed_phi;
-		pt_t sum_pt;
-		pt_etaphi_t sum_pt_eta, sum_pt_phi;
-		count_t count;
-
-		findSeed(work, seedp, seed_eta, seed_phi);
-		formJet(work, incone, seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count);
-		updateAxis(seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, currentJet);
+        Particle seedp;
+        etaphi_t seed_eta, seed_phi;
+        pt_t sum_pt;
+        pt_etaphi_t sum_pt_eta, sum_pt_phi;
+        count_t count;
+        findSeed(work, seedp, seed_eta, seed_phi);
+        formJet(work, incone, seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count);
+        updateAxis(seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, currentJet);
         updateWork(work, incone);
         addJetPtSorted(currentJet, myjet);
     }
 
     copyOutput(myjet, jet);
 }
-
 
