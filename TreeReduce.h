@@ -28,7 +28,7 @@ constexpr int pow2(int x){
  * before applying and accumulate the result over the rolled dimension.
  * --- */
 template<class T, int N, class Op>
-T reduce(T* x, Op op){
+T reduce(const T* x, Op op){
     #pragma HLS pipeline II=1
     static constexpr int leftN = pow2(floorlog2(N - 1)) > 0 ? pow2(floorlog2(N - 1)) : 0;
     static constexpr int rightN = N - leftN > 0 ? N - leftN : 0;
