@@ -112,7 +112,7 @@ void addJetPtSorted(const Jet currentJet, Jet myjet[NJETS]){
 }
 
 void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t seed_eta, etaphi_t seed_phi,
-             pt_t sum_pts[NPARTICLES], pt_etaphi_t sum_pt_etas[NPARTICLES], pt_etaphi_t sum_pt_phis[NPARTICLES]){
+             PartialParticle partialParts[NPARTICLES]){
 
 	#pragma HLS pipeline
 #ifndef __SYNTHESIS__
@@ -120,9 +120,7 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
 #endif
     #pragma HLS array_partition variable=work complete
     #pragma HLS array_partition variable=incone complete
-	#pragma HLS array_partition variable=sum_pts complete
-	#pragma HLS array_partition variable=sum_pt_etas complete
-	#pragma HLS array_partition variable=sum_pt_phis complete
+    #pragma HLS array_partition variable=partialParts complete
 
     // this block finds the jet constituents, and marks them
     JetsLoopParticleLoop:
@@ -137,9 +135,9 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
         bool ic = deta*deta + dphiw*dphiw < R2CONE;
         incone[i] = ic;
         pt_t maybePt =  ic ? work[i].hwPt : pt_t(0);
-        sum_pts[i]    = maybePt;
-        sum_pt_etas[i] = maybePt * (detaphi_t)deta; // range is bounded since |deta| < 0.04 = 40 units
-        sum_pt_phis[i] = maybePt * (detaphi_t)dphiw;
+        partialParts[i].hwPt = maybePt;
+        partialParts[i].hwEta = (detaphi_t) deta;
+        partialParts[i].hwPhi = (detaphi_t) dphi;
 /*#ifndef __SYNTHESIS__
         if(incone[i]){
             std::cout << " part: pt " << maybePt << ", eta: " << work[i].hwEta << ", phi: " << work[i].hwPhi << std::endl;
@@ -149,9 +147,21 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
     }
 }
 
-void formJet(const pt_t sum_pts[NPARTICLES], const pt_etaphi_t sum_pt_etas[NPARTICLES], const pt_etaphi_t sum_pt_phis[NPARTICLES],
-        pt_t & sum_pt, pt_etaphi_t & sum_pt_eta, pt_etaphi_t & sum_pt_phi, count_t & count){
+void formJet(const PartialParticle partialParts[NPARTICLES], pt_t & sum_pt, pt_etaphi_t & sum_pt_eta, pt_etaphi_t & sum_pt_phi, count_t & count){
     #pragma HLS pipeline
+    pt_t sum_pts[NPARTICLES];
+    pt_etaphi_t sum_pt_etas[NPARTICLES];
+    pt_etaphi_t sum_pt_phis[NPARTICLES];
+    #pragma HLS array_partition variable=sum_pts complete
+    #pragma HLS array_partition variable=sum_pt_etas complete
+    #pragma HLS array_partition variable=sum_pt_phis complete
+
+    for(int i = 0; i < NPARTICLES; i++){
+        #pragma HLS unroll
+        sum_pts[i]     = partialParts[i].hwPt;
+        sum_pt_etas[i] = partialParts[i].hwPt * partialParts[i].hwEta; // range is bounded since |deta| < 0.04 = 40 units
+        sum_pt_phis[i] = partialParts[i].hwPt * partialParts[i].hwPhi;
+    }
     // sum the in-cone pt and pt-weighted delta-eta, delta-phis
     Op_add<pt_t> op_add_pt;
     sum_pt = reduce<pt_t, NPARTICLES, Op_add<pt_t>>(sum_pts, op_add_pt);
@@ -213,55 +223,60 @@ void copyOutput(Jet myjet[NJETS], Jet jet[NJETS]){
 }
 
 
-void jet_loop(const Particle particles_in[NPARTICLES], Particle particles_out[NPARTICLES], bool incone[NPARTICLES],
-              pt_t sum_pts[NPARTICLES], pt_etaphi_t sum_pt_etas[NPARTICLES], pt_etaphi_t sum_pt_phis[NPARTICLES], 
-              etaphi_t & seed_eta, etaphi_t & seed_phi) {
+void jet_loop(const Particle particles_in[NPARTICLES], Particle particles_out[NPARTICLES],
+              PartialParticle partialParts[NPARTICLES], etaphi_t & seed_eta, etaphi_t & seed_phi) {
     #pragma HLS array_partition variable=particles_in complete
     #pragma HLS array_partition variable=particles_out complete
-    #pragma HLS array_partition variable=incone complete
-    #pragma HLS array_partition variable=sum_pts complete
-    #pragma HLS array_partition variable=sum_pt_etas complete
-    #pragma HLS array_partition variable=sum_pt_phis complete
+    #pragma HLS array_partition variable=partialParts complete
     #pragma HLS data_pack variable=particles_in
     #pragma HLS data_pack variable=particles_out
+    #pragma HLS data_pack variable=partialParts
     #pragma HLS interface ap_none port=particles_out
-    #pragma HLS interface ap_none port=incone 
-    #pragma HLS interface ap_none port=sum_pts 
-    #pragma HLS interface ap_none port=sum_pt_etas 
-    #pragma HLS interface ap_none port=sum_pt_phis 
+    #pragma HLS interface ap_none port=partialParts
     #pragma HLS pipeline
 
     Particle seedp;
-    bool incone_int[NPARTICLES];
+    bool incone[NPARTICLES];
+
+    #pragma HLS array_partition variable=incone complete
+    PartialParticle partialParts_int[NPARTICLES];
     etaphi_t seed_eta_int, seed_phi_int;
     for(int i = 0; i < NPARTICLES; i++){
         #pragma HLS unroll
-        incone_int[i] = false;
+        incone[i] = false;
+        clear(partialParts_int[i]);
     }
 
     findSeed(particles_in, seedp, seed_eta_int, seed_phi_int);
-    findJet(particles_in, incone_int, seed_eta_int, seed_phi_int, sum_pts, sum_pt_etas, sum_pt_phis);
+    findJet(particles_in, incone, seed_eta_int, seed_phi_int, partialParts_int);
     copyInput(particles_in, particles_out);
-    updateWork(particles_out, incone_int);
+    updateWork(particles_out, incone);
 
     for(int i = 0; i < NPARTICLES; i++){
         #pragma HLS unroll
-        incone[i] = incone_int[i];
+        partialParts[i] = partialParts_int[i];
     }
     seed_eta = seed_eta_int;
     seed_phi = seed_phi_int;
 }
 
-void jet_compute(const pt_t sum_pts[NPARTICLES], const pt_etaphi_t sum_pt_etas[NPARTICLES], const pt_etaphi_t sum_pt_phis[NPARTICLES],
+void jet_compute(const PartialParticle particles[NPARTICLES], 
                  const etaphi_t seed_eta, const etaphi_t seed_phi, Jet & jet){
+    #pragma HLS array_partition variable=particles complete
+    #pragma HLS data_pack variable=particles
+    #pragma HLS data_pack variable=jet
+    #pragma HLS pipeline
+
+    pt_t sum_pts[NPARTICLES];
+    pt_etaphi_t sum_pt_etas[NPARTICLES];
+    pt_etaphi_t sum_pt_phis[NPARTICLES];
     #pragma HLS array_partition variable=sum_pts complete
     #pragma HLS array_partition variable=sum_pt_etas complete
     #pragma HLS array_partition variable=sum_pt_phis complete
-    #pragma HLS data_pack variable=jet
-    #pragma HLS pipeline
+
     pt_t sum_pt;
     pt_etaphi_t sum_pt_eta, sum_pt_phi;
     count_t count;
-    formJet(sum_pts, sum_pt_etas, sum_pt_phis, sum_pt, sum_pt_eta, sum_pt_phi, count);
+    formJet(particles, sum_pt, sum_pt_eta, sum_pt_phi, count);
     updateAxis(seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, jet);
 }

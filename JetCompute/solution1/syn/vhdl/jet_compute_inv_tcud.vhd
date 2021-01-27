@@ -6,7 +6,7 @@ library ieee;
 use ieee.std_logic_1164.all; 
 use ieee.std_logic_unsigned.all;
 
-entity jet_compute_inv_tbkb_rom is 
+entity jet_compute_inv_tcud_rom is 
     generic(
              DWIDTH     : integer := 8; 
              AWIDTH     : integer := 10; 
@@ -21,7 +21,7 @@ entity jet_compute_inv_tbkb_rom is
 end entity; 
 
 
-architecture rtl of jet_compute_inv_tbkb_rom is 
+architecture rtl of jet_compute_inv_tcud_rom is 
 
 signal addr0_tmp : std_logic_vector(AWIDTH-1 downto 0); 
 type mem_array is array (0 to MEM_SIZE-1) of std_logic_vector (DWIDTH-1 downto 0); 
@@ -74,7 +74,7 @@ end rtl;
 Library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity jet_compute_inv_tbkb is
+entity jet_compute_inv_tcud is
     generic (
         DataWidth : INTEGER := 8;
         AddressRange : INTEGER := 1024;
@@ -87,8 +87,8 @@ entity jet_compute_inv_tbkb is
         q0 : OUT STD_LOGIC_VECTOR(DataWidth - 1 DOWNTO 0));
 end entity;
 
-architecture arch of jet_compute_inv_tbkb is
-    component jet_compute_inv_tbkb_rom is
+architecture arch of jet_compute_inv_tcud is
+    component jet_compute_inv_tcud_rom is
         port (
             clk : IN STD_LOGIC;
             addr0 : IN STD_LOGIC_VECTOR;
@@ -99,7 +99,7 @@ architecture arch of jet_compute_inv_tbkb is
 
 
 begin
-    jet_compute_inv_tbkb_rom_U :  component jet_compute_inv_tbkb_rom
+    jet_compute_inv_tcud_rom_U :  component jet_compute_inv_tcud_rom
     port map (
         clk => clk,
         addr0 => address0,

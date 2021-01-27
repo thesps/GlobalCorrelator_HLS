@@ -173,7 +173,7 @@ architecture behav of reduce_6 is
     signal grp_reduce_1_fu_1050_ap_return_2 : STD_LOGIC_VECTOR (9 downto 0);
     signal call_ret_reg_6888_1 : STD_LOGIC_VECTOR (9 downto 0);
     signal call_ret_reg_6888_2 : STD_LOGIC_VECTOR (9 downto 0);
-    signal Particle_hwPt_V_read_reg_6894 : STD_LOGIC_VECTOR (15 downto 0);
+    signal TemplateParticle_hwP_reg_6894 : STD_LOGIC_VECTOR (15 downto 0);
     signal grp_reduce_1_fu_1246_ap_return_0 : STD_LOGIC_VECTOR (15 downto 0);
     signal grp_reduce_1_fu_1246_ap_return_1 : STD_LOGIC_VECTOR (9 downto 0);
     signal grp_reduce_1_fu_1246_ap_return_2 : STD_LOGIC_VECTOR (9 downto 0);
@@ -1333,7 +1333,7 @@ begin
     begin
         if (ap_clk'event and ap_clk = '1') then
             if (((ap_const_boolean_0 = ap_block_pp0_stage0_11001) and (ap_const_logic_1 = ap_ce))) then
-                Particle_hwPt_V_read_reg_6894 <= grp_reduce_1_fu_1050_ap_return_0;
+                TemplateParticle_hwP_reg_6894 <= grp_reduce_1_fu_1050_ap_return_0;
                 b_hwPt_V_read_assign_reg_6906 <= grp_reduce_1_fu_1246_ap_return_0;
                 call_ret1_reg_6900_1 <= grp_reduce_1_fu_1246_ap_return_1;
                 call_ret1_reg_6900_2 <= grp_reduce_1_fu_1246_ap_return_2;
@@ -1912,7 +1912,7 @@ begin
     grp_reduce_1_fu_1246_x_9_hwEta_V_read <= x_73_read_int_reg(25 downto 16);
     grp_reduce_1_fu_1246_x_9_hwPhi_V_read <= x_73_read_int_reg(35 downto 26);
     grp_reduce_1_fu_1246_x_9_hwPt_V_read <= x_73_read_int_reg(16 - 1 downto 0);
-    icmp_ln1496_fu_4918_p2 <= "1" when (unsigned(Particle_hwPt_V_read_reg_6894) < unsigned(b_hwPt_V_read_assign_reg_6906)) else "0";
+    icmp_ln1496_fu_4918_p2 <= "1" when (unsigned(TemplateParticle_hwP_reg_6894) < unsigned(b_hwPt_V_read_assign_reg_6906)) else "0";
     select_ln84_1_fu_4934_p3 <= 
         call_ret_reg_6888_1 when (xor_ln1496_fu_4922_p2(0) = '1') else 
         call_ret1_reg_6900_1;
@@ -1920,7 +1920,7 @@ begin
         call_ret_reg_6888_2 when (xor_ln1496_fu_4922_p2(0) = '1') else 
         call_ret1_reg_6900_2;
     select_ln84_fu_4928_p3 <= 
-        Particle_hwPt_V_read_reg_6894 when (xor_ln1496_fu_4922_p2(0) = '1') else 
+        TemplateParticle_hwP_reg_6894 when (xor_ln1496_fu_4922_p2(0) = '1') else 
         b_hwPt_V_read_assign_reg_6906;
     xor_ln1496_fu_4922_p2 <= (icmp_ln1496_fu_4918_p2 xor ap_const_lv1_1);
 end behav;

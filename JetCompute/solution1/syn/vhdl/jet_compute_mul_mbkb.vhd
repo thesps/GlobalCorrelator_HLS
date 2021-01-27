@@ -3,23 +3,23 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity jet_compute_mul_mcud_DSP48_0 is
+entity jet_compute_mul_mbkb_DSP48_0 is
 port (
     clk: in std_logic;
     rst: in std_logic;
     ce: in std_logic;
-    a: in std_logic_vector(18 - 1 downto 0);
+    a: in std_logic_vector(16 - 1 downto 0);
     b: in std_logic_vector(22 - 1 downto 0);
-    p: out std_logic_vector(40 - 1 downto 0));
+    p: out std_logic_vector(24 - 1 downto 0));
 
 end entity;
 
-architecture behav of jet_compute_mul_mcud_DSP48_0 is
-    signal a_cvt: unsigned(18 - 1 downto 0);
+architecture behav of jet_compute_mul_mbkb_DSP48_0 is
+    signal a_cvt: unsigned(16 - 1 downto 0);
     signal b_cvt: signed(22 - 1 downto 0);
-    signal p_cvt: signed(40 - 1 downto 0);
+    signal p_cvt: signed(24 - 1 downto 0);
 
-    signal p_reg: signed(40 - 1 downto 0);
+    signal p_reg: signed(24 - 1 downto 0);
 
 begin
 
@@ -35,14 +35,14 @@ begin
         end if;
     end process;
 
-    p_cvt <= signed (resize(unsigned (signed ('0' & a_cvt) * signed (b_cvt)), 40));
+    p_cvt <= signed (resize(unsigned (signed ('0' & a_cvt) * signed (b_cvt)), 24));
     p <= std_logic_vector(p_reg);
 
 end architecture;
 Library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity jet_compute_mul_mcud is
+entity jet_compute_mul_mbkb is
     generic (
         ID : INTEGER;
         NUM_STAGE : INTEGER;
@@ -58,8 +58,8 @@ entity jet_compute_mul_mcud is
         dout : OUT STD_LOGIC_VECTOR(dout_WIDTH - 1 DOWNTO 0));
 end entity;
 
-architecture arch of jet_compute_mul_mcud is
-    component jet_compute_mul_mcud_DSP48_0 is
+architecture arch of jet_compute_mul_mbkb is
+    component jet_compute_mul_mbkb_DSP48_0 is
         port (
             clk : IN STD_LOGIC;
             rst : IN STD_LOGIC;
@@ -72,7 +72,7 @@ architecture arch of jet_compute_mul_mcud is
 
 
 begin
-    jet_compute_mul_mcud_DSP48_0_U :  component jet_compute_mul_mcud_DSP48_0
+    jet_compute_mul_mbkb_DSP48_0_U :  component jet_compute_mul_mbkb_DSP48_0
     port map (
         clk => clk,
         rst => reset,

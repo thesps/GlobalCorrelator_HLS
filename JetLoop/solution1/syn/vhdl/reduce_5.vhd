@@ -84,7 +84,7 @@ architecture behav of reduce_5 is
     signal ap_block_state2_pp0_stage0_iter1 : BOOLEAN;
     signal ap_block_state3_pp0_stage0_iter2 : BOOLEAN;
     signal ap_block_pp0_stage0_11001 : BOOLEAN;
-    signal Particle_hwPt_V_read_reg_582 : STD_LOGIC_VECTOR (15 downto 0);
+    signal TemplateParticle_hwP_reg_582 : STD_LOGIC_VECTOR (15 downto 0);
     signal grp_reduce_fu_454_ap_return_0 : STD_LOGIC_VECTOR (15 downto 0);
     signal grp_reduce_fu_454_ap_return_1 : STD_LOGIC_VECTOR (9 downto 0);
     signal grp_reduce_fu_454_ap_return_2 : STD_LOGIC_VECTOR (9 downto 0);
@@ -277,7 +277,7 @@ begin
     begin
         if (ap_clk'event and ap_clk = '1') then
             if (((ap_const_boolean_0 = ap_block_pp0_stage0_11001) and (ap_const_logic_1 = ap_ce_reg))) then
-                Particle_hwPt_V_read_reg_582 <= grp_reduce_fu_402_ap_return_0;
+                TemplateParticle_hwP_reg_582 <= grp_reduce_fu_402_ap_return_0;
                 b_hwPt_V_read_assign_reg_594 <= grp_reduce_fu_454_ap_return_0;
                 call_ret9_reg_576_1 <= grp_reduce_fu_402_ap_return_1;
                 call_ret9_reg_576_2 <= grp_reduce_fu_402_ap_return_2;
@@ -414,7 +414,7 @@ begin
         end if; 
     end process;
 
-    icmp_ln1496_fu_526_p2 <= "1" when (unsigned(Particle_hwPt_V_read_reg_582) < unsigned(b_hwPt_V_read_assign_reg_594)) else "0";
+    icmp_ln1496_fu_526_p2 <= "1" when (unsigned(TemplateParticle_hwP_reg_582) < unsigned(b_hwPt_V_read_assign_reg_594)) else "0";
     select_ln84_3_fu_542_p3 <= 
         call_ret9_reg_576_1 when (xor_ln1496_fu_530_p2(0) = '1') else 
         call_ret_reg_588_1;
@@ -422,7 +422,7 @@ begin
         call_ret9_reg_576_2 when (xor_ln1496_fu_530_p2(0) = '1') else 
         call_ret_reg_588_2;
     select_ln84_fu_536_p3 <= 
-        Particle_hwPt_V_read_reg_582 when (xor_ln1496_fu_530_p2(0) = '1') else 
+        TemplateParticle_hwP_reg_582 when (xor_ln1496_fu_530_p2(0) = '1') else 
         b_hwPt_V_read_assign_reg_594;
     xor_ln1496_fu_530_p2 <= (icmp_ln1496_fu_526_p2 xor ap_const_lv1_1);
 end behav;
