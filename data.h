@@ -24,22 +24,27 @@ static const etaphi_t FIDUCIAL_ETA_PHI = 5.11 * 100 / 128;
 static const pt_t JET_PT_CUT = 5;
 
 
-class Particle {
+template<class pt_T, class etaphi_T>
+class TemplateParticle {
 public:
-    pt_t hwPt;
-    etaphi_t hwEta; 
-    etaphi_t hwPhi; 
+    pt_T hwPt;
+    etaphi_T hwEta; 
+    etaphi_T hwPhi; 
 
-    bool operator >= (const Particle &b){
+    bool operator >= (const TemplateParticle<pt_T,etaphi_T> &b){
         return hwPt >= b.hwPt;
     }
 };
 
-inline void clear(Particle & p) {
+template<class pt_T, class etaphi_T>
+inline void clear(TemplateParticle<pt_T, etaphi_T> & p) {
     p.hwPt = 0;
     p.hwEta = 0;
     p.hwPhi = 0;
 }
+
+typedef TemplateParticle<pt_t, etaphi_t> Particle;
+typedef TemplateParticle<pt_t, pt_etaphi_t> PartialParticle;
 
 struct Jet : public Particle {
     ap_uint<5> iSeed;
