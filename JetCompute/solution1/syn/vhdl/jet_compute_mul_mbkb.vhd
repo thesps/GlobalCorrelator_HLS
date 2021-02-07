@@ -21,6 +21,8 @@ architecture behav of jet_compute_mul_mbkb_DSP48_0 is
 
     signal p_reg: signed(24 - 1 downto 0);
 
+    signal a_reg: unsigned(16 - 1 downto 0) ; 
+    signal b_reg: signed(22 - 1 downto 0) ; 
 begin
 
     a_cvt <= unsigned(a);
@@ -30,12 +32,14 @@ begin
     begin
         if (clk'event and clk = '1') then
             if (ce = '1') then
+                a_reg <= a_cvt;
+                b_reg <= b_cvt;
                 p_reg <= p_cvt;
             end if;
         end if;
     end process;
 
-    p_cvt <= signed (resize(unsigned (signed ('0' & a_cvt) * signed (b_cvt)), 24));
+    p_cvt <= signed (resize(unsigned (signed ('0' & a_reg) * signed (b_reg)), 24));
     p <= std_logic_vector(p_reg);
 
 end architecture;

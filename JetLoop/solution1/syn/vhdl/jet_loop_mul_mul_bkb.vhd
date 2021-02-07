@@ -8,18 +8,18 @@ port (
     clk: in std_logic;
     rst: in std_logic;
     ce: in std_logic;
-    a: in std_logic_vector(11 - 1 downto 0);
-    b: in std_logic_vector(11 - 1 downto 0);
-    p: out std_logic_vector(22 - 1 downto 0));
+    a: in std_logic_vector(12 - 1 downto 0);
+    b: in std_logic_vector(12 - 1 downto 0);
+    p: out std_logic_vector(23 - 1 downto 0));
 
 end entity;
 
 architecture behav of jet_loop_mul_mul_bkb_DSP48_0 is
-    signal a_cvt: signed(11 - 1 downto 0);
-    signal b_cvt: signed(11 - 1 downto 0);
-    signal p_cvt: signed(22 - 1 downto 0);
+    signal a_cvt: signed(12 - 1 downto 0);
+    signal b_cvt: signed(12 - 1 downto 0);
+    signal p_cvt: signed(23 - 1 downto 0);
 
-    signal p_reg: signed(22 - 1 downto 0);
+    signal p_reg: signed(23 - 1 downto 0);
 
 begin
 
@@ -35,7 +35,7 @@ begin
         end if;
     end process;
 
-    p_cvt <= signed (resize(unsigned (signed (a_cvt) * signed (b_cvt)), 22));
+    p_cvt <= signed (resize(unsigned (signed (a_cvt) * signed (b_cvt)), 23));
     p <= std_logic_vector(p_reg);
 
 end architecture;

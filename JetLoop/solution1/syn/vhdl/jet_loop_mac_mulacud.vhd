@@ -13,8 +13,8 @@ port (
     ce:  in  std_logic;
     in0:  in  std_logic_vector(11 - 1 downto 0);
     in1:  in  std_logic_vector(11 - 1 downto 0);
-    in2:  in  std_logic_vector(22 - 1 downto 0);
-    dout: out std_logic_vector(22 - 1 downto 0));
+    in2:  in  std_logic_vector(23 - 1 downto 0);
+    dout: out std_logic_vector(23 - 1 downto 0));
 
 end entity;
 
@@ -41,7 +41,7 @@ process (clk) begin
     end if;
 end process;
 
-dout <= std_logic_vector(resize(unsigned(p), 22));
+dout <= std_logic_vector(resize(unsigned(p), 23));
 
 end architecture;
 Library IEEE;

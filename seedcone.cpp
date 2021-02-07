@@ -7,6 +7,7 @@
 
 #ifndef __SYNTHESIS__
 #include <cstdio>
+#include <vector>
 #endif
 
 template<class data_T, int N>
@@ -74,6 +75,8 @@ void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
     etaphi_t jet_eta = seed_eta + etaphi_t(sum_pt_eta * inv_pt);
     etaphi_t jet_phi = seed_phi + etaphi_t(sum_pt_phi * inv_pt);
 #ifndef __SYNTHESIS__
+    std::cout << " sum_pt_eta: " << sum_pt_eta << ", sum_pt_eta * 1 / pt: " << etaphi_t(sum_pt_eta * inv_pt) << std::endl;
+    std::cout << " sum_pt_phi: " << sum_pt_phi << ", sum_pt_phi * 1 / pt: " << etaphi_t(sum_pt_phi * inv_pt) << std::endl;
     std::cout << " uncorr eta: " << seed_eta << ", phi: " << seed_phi << std::endl;
     std::cout << "   corr eta: " << jet_eta << ", phi: " << jet_phi << std::endl;
 #endif
@@ -93,6 +96,15 @@ void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
         clear(jet);
     }
 
+}
+
+// from https://github.com/Licheng-Guo/vivado-hls-broadcast-optimization/
+template<class T>
+T dreg(T in){
+#pragma HLS pipeline
+#pragma HLS inline off
+#pragma HLS interface port=return register
+    return in;
 }
 
 void addJetPtSorted(const Jet currentJet, Jet myjet[NJETS]){
@@ -115,9 +127,6 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
              PartialParticle partialParts[NPARTICLES]){
 
 	#pragma HLS pipeline
-#ifndef __SYNTHESIS__
-    std::cout << " Seed: pt " << sum_pt << ", eta: " << seed_eta << ", phi: " << seed_phi << std::endl;
-#endif
     #pragma HLS array_partition variable=work complete
     #pragma HLS array_partition variable=incone complete
     #pragma HLS array_partition variable=partialParts complete
@@ -126,8 +135,11 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
     JetsLoopParticleLoop:
     for (unsigned int i = 0; i < NPARTICLES; i++) {
         #pragma HLS unroll
-        detaphi_t deta = work[i].hwEta - seed_eta;
-        detaphi_t dphi = work[i].hwPhi - seed_phi;
+        detaphi_t deta = dreg<detaphi_t>(work[i].hwEta - seed_eta);
+        detaphi_t dphi = dreg<detaphi_t>(work[i].hwPhi - seed_phi);
+        //detaphi_t deta = work[i].hwEta - dreg(seed_eta);
+        //detaphi_t dphi = work[i].hwPhi - dreg(seed_phi);
+
         // phi wrap
         detaphi_t dphi0 = dphi > PI ? (detaphi_t) (TWOPI - dphi) : (detaphi_t) dphi;
         detaphi_t dphi1 = dphi < -PI ? (detaphi_t) (TWOPI + dphi) : (detaphi_t) dphi;
@@ -137,7 +149,7 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
         pt_t maybePt =  ic ? work[i].hwPt : pt_t(0);
         partialParts[i].hwPt = maybePt;
         partialParts[i].hwEta = (detaphi_t) deta;
-        partialParts[i].hwPhi = (detaphi_t) dphi;
+        partialParts[i].hwPhi = (detaphi_t) dphiw;
 /*#ifndef __SYNTHESIS__
         if(incone[i]){
             std::cout << " part: pt " << maybePt << ", eta: " << work[i].hwEta << ", phi: " << work[i].hwPhi << std::endl;
@@ -162,6 +174,18 @@ void formJet(const PartialParticle partialParts[NPARTICLES], pt_t & sum_pt, pt_e
         sum_pt_etas[i] = partialParts[i].hwPt * partialParts[i].hwEta; // range is bounded since |deta| < 0.04 = 40 units
         sum_pt_phis[i] = partialParts[i].hwPt * partialParts[i].hwPhi;
     }
+#ifndef __SYNTHESIS__
+    for(int i = 0; i < NPARTICLES; i++){
+        if(sum_pts[i] > 0){
+            std::cout << "pt_deta: " << sum_pt_etas[i] << std::endl;
+        }
+    }
+    for(int i = 0; i < NPARTICLES; i++){
+        if(sum_pts[i] > 0){
+            std::cout << "pt_dhi: " << sum_pt_phis[i] << std::endl;
+        }
+    }
+#endif
     // sum the in-cone pt and pt-weighted delta-eta, delta-phis
     Op_add<pt_t> op_add_pt;
     sum_pt = reduce<pt_t, NPARTICLES, Op_add<pt_t>>(sum_pts, op_add_pt);
@@ -187,6 +211,9 @@ void findSeed(const Particle work[NPARTICLES], Particle & seedp, etaphi_t & seed
     seedp = reduce<Particle, NPARTICLES, Op_max<Particle>>(work, op_max);
     seed_eta = seedp.hwPt > 0 ? seedp.hwEta : etaphi_t (0);
     seed_phi = seedp.hwPt > 0 ? seedp.hwPhi : etaphi_t (0);
+#ifndef __SYNTHESIS__
+    std::cout << " Seed: pt " << seedp.hwPt << ", eta: " << seed_eta << ", phi: " << seed_phi << std::endl;
+#endif
 }
 
 void updateWork(Particle work[NPARTICLES], bool incone[NPARTICLES]){
@@ -280,3 +307,27 @@ void jet_compute(const PartialParticle particles[NPARTICLES],
     formJet(particles, sum_pt, sum_pt_eta, sum_pt_phi, count);
     updateAxis(seed_eta, seed_phi, sum_pt, sum_pt_eta, sum_pt_phi, count, jet);
 }
+
+#ifndef __SYNTHESIS__
+void algo_main(const Particle particles[NPARTICLES], Jet jets[NJETS]){
+    // Function calling both Loop and Compute functions, intended for simulation
+    Particle parts_in[NPARTICLES];
+    Particle parts_out[NPARTICLES];
+    PartialParticle partialParts[NPARTICLES];
+
+    std::vector<Jet> jets_int;
+    jets_int.resize(NJETS);
+    for(int j = 0; j < NPARTICLES; j++){ parts_in[j] = particles[j]; }
+
+    for(int i = 0; i < NJETS; i++){
+        etaphi_t seed_eta, seed_phi;
+        jet_loop(parts_in, parts_out, partialParts, seed_eta, seed_phi);
+        Jet jet;
+        jet_compute(partialParts, seed_eta, seed_phi, jet);
+        jets_int[i] = jet;
+        for(int j = 0; j < NPARTICLES; j++){ parts_in[j] = parts_out[j]; }
+    }
+    std::sort(jets_int.begin(), jets_int.end(), [](Jet i, Jet j) {return (i.hwPt > j.hwPt);});
+    for(int i = 0; i < NJETS; i++){ jets[i] = jets_int.at(i); }
+}
+#endif

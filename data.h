@@ -6,7 +6,8 @@
 
 typedef ap_ufixed<16,14>  pt_t;      // 1 unit = 0.25 GeV; max = 16 TeV
 typedef ap_fixed<10,4>    etaphi_t;   // 1 unit = 0.01;     max = +/- 5.12
-typedef ap_fixed<11,5>    detaphi_t;  // 1 unit = 0.01;     max = +/- 10.24 
+typedef ap_fixed<12,6>    detaphi_t;  // 1 unit = 0.01;     max = +/- 10.24 
+typedef ap_fixed<18,9>    detaphi2_t;
 typedef ap_fixed<22,16> pt_etaphi_t; // type for product of pt with eta or phi
 typedef ap_uint<5> count_t; // type for multiplicity
 
@@ -14,13 +15,15 @@ typedef ap_uint<5> count_t; // type for multiplicity
 typedef ap_ufixed<18,-2> inv_pt_t;
 static constexpr int N_table_inv_pt = 1024;
 
-static const detaphi_t TWOPI = 3.14159 * 0.78125 * 2; // 0.78125 is 100 / 128
-static const detaphi_t PI = 3.14159 * 0.78125; // 0.78125 is 100 / 128
-static const detaphi_t HALFPI = 3.14159 * 0.78125 / 2; // 0.78125 is 100 / 128
-static const detaphi_t RCONE = 0.4 * 100 / 128;
+static const float etaphi_base = 100. / 64;
+
+static const detaphi_t TWOPI = 3.14159 * 2. * etaphi_base; // 0.78125 is 100 / 128
+static const detaphi_t PI = 3.14159 * etaphi_base; // 0.78125 is 100 / 128
+static const detaphi_t HALFPI = 3.14159 / 2. * etaphi_base; // 0.78125 is 100 / 128
+static const detaphi_t RCONE = 0.4 * etaphi_base;
 static const detaphi_t R2CONE = RCONE * RCONE;
 
-static const etaphi_t FIDUCIAL_ETA_PHI = 5.11 * 100 / 128;
+static const etaphi_t FIDUCIAL_ETA_PHI = 5.11 * etaphi_base;
 static const pt_t JET_PT_CUT = 5;
 
 
@@ -60,7 +63,7 @@ inline void clear(Jet & jet) {
 }
 
 #define NPARTICLES 128
-#define NJETS 12
+#define NJETS 10
 
 //#define RCONE 40
 //#define R2CONE (RCONE*RCONE)
