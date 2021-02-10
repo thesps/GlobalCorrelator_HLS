@@ -101,11 +101,48 @@ void updateAxis(etaphi_t seed_eta, etaphi_t seed_phi,
 // from https://github.com/Licheng-Guo/vivado-hls-broadcast-optimization/
 template<class T>
 T dreg(T in){
-#pragma HLS pipeline
-#pragma HLS inline off
-#pragma HLS interface port=return register
+    #pragma HLS pipeline
+    #pragma HLS inline off
+    #pragma HLS interface port=return register
     return in;
 }
+
+/*template<class T>
+void broadcast128(T in, T out[128]){
+    #pragma HLS pipeline
+    T tmp[16];
+    for(int i = 0; i < 16; i++){
+        #pragma HLS unroll
+        tmp[i] = dreg<T>(in);
+    }
+    for(int i = 0; i < 128; i++){
+        #pragma HLS unroll
+        out[i] = dreg<T>(tmp[i/8]);
+    }
+}*/
+
+/*template<class T, int NOUT, int MAXFANOUT>
+void broadcast(T in, T out[NOUT]){
+    #pragma HLS pipeline
+    static constexpr int NSTAGES = ceillog2(MAXFANOUT);
+    // Assigning NOUT for each stages is possibly wasteful
+    // but we won't write to all, so some should be trimmed
+    T tmp[NSTAGES+1][NOUT]; 
+    tmp[0][0] = in;
+    int lim = 1;
+    for(int i = 1; i <= NSTAGES; i++){
+        #pragma HLS unroll
+        lim *= MAXFANOUT;
+        for(int j = 0; j < lim; j++){
+            #pragma HLS unroll
+            tmp[i][j] = dreg<T>(tmp[i-1][j/MAXFANOUT]);
+        }
+    }
+    for(int i = 0; i < NOUT; i++){
+        #pragma HLS unroll
+        out[i] = tmp[NSTAGES+1][i];
+    }
+}*/
 
 void addJetPtSorted(const Jet currentJet, Jet myjet[NJETS]){
     // Add one jet to the list, keeping them pt sorted
@@ -130,6 +167,13 @@ void findJet(const Particle work[NPARTICLES], bool incone[NPARTICLES], etaphi_t 
     #pragma HLS array_partition variable=work complete
     #pragma HLS array_partition variable=incone complete
     #pragma HLS array_partition variable=partialParts complete
+
+    etaphi_t seed_eta_broadcast[NPARTICLES];
+    etaphi_t seed_phi_broadcast[NPARTICLES];
+    #pragma HLS array_partition variable=seed_eta_broadcast complete
+    #pragma HLS array_partition variable=seed_phi_broadcast complete
+    //broadcast128<etaphi_t>(seed_eta, seed_eta_broadcast);
+    //broadcast128<etaphi_t>(seed_phi, seed_phi_broadcast);
 
     // this block finds the jet constituents, and marks them
     JetsLoopParticleLoop:

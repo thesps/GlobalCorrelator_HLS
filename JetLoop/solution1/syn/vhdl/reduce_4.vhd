@@ -32,9 +32,9 @@ architecture behav of reduce_4 is
 
     signal icmp_ln1496_fu_64_p2 : STD_LOGIC_VECTOR (0 downto 0);
     signal xor_ln1496_fu_70_p2 : STD_LOGIC_VECTOR (0 downto 0);
-    signal select_ln84_fu_76_p3 : STD_LOGIC_VECTOR (15 downto 0);
-    signal select_ln84_5_fu_84_p3 : STD_LOGIC_VECTOR (9 downto 0);
-    signal select_ln84_6_fu_92_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln93_fu_76_p3 : STD_LOGIC_VECTOR (15 downto 0);
+    signal select_ln93_5_fu_84_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln93_6_fu_92_p3 : STD_LOGIC_VECTOR (9 downto 0);
 
 
 begin
@@ -42,17 +42,17 @@ begin
 
 
     ap_ready <= ap_const_logic_1;
-    ap_return_0 <= select_ln84_fu_76_p3;
-    ap_return_1 <= select_ln84_5_fu_84_p3;
-    ap_return_2 <= select_ln84_6_fu_92_p3;
+    ap_return_0 <= select_ln93_fu_76_p3;
+    ap_return_1 <= select_ln93_5_fu_84_p3;
+    ap_return_2 <= select_ln93_6_fu_92_p3;
     icmp_ln1496_fu_64_p2 <= "1" when (unsigned(x_0_hwPt_V_read) < unsigned(x_1_hwPt_V_read)) else "0";
-    select_ln84_5_fu_84_p3 <= 
+    select_ln93_5_fu_84_p3 <= 
         x_0_hwEta_V_read when (xor_ln1496_fu_70_p2(0) = '1') else 
         x_1_hwEta_V_read;
-    select_ln84_6_fu_92_p3 <= 
+    select_ln93_6_fu_92_p3 <= 
         x_0_hwPhi_V_read when (xor_ln1496_fu_70_p2(0) = '1') else 
         x_1_hwPhi_V_read;
-    select_ln84_fu_76_p3 <= 
+    select_ln93_fu_76_p3 <= 
         x_0_hwPt_V_read when (xor_ln1496_fu_70_p2(0) = '1') else 
         x_1_hwPt_V_read;
     xor_ln1496_fu_70_p2 <= (icmp_ln1496_fu_64_p2 xor ap_const_lv1_1);

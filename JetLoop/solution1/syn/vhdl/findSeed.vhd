@@ -181,8 +181,8 @@ architecture behav of findSeed is
     signal ap_block_pp0_stage0_11001_ignoreCallOp138 : BOOLEAN;
     signal ap_block_pp0_stage0 : BOOLEAN;
     signal icmp_ln1494_fu_1316_p2 : STD_LOGIC_VECTOR (0 downto 0);
-    signal select_ln212_fu_1322_p3 : STD_LOGIC_VECTOR (9 downto 0);
-    signal select_ln213_fu_1330_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln256_fu_1322_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln257_fu_1330_p3 : STD_LOGIC_VECTOR (9 downto 0);
     signal ap_ce_reg : STD_LOGIC;
     signal work_0_read_int_reg : STD_LOGIC_VECTOR (35 downto 0);
     signal work_1_read_int_reg : STD_LOGIC_VECTOR (35 downto 0);
@@ -607,8 +607,8 @@ begin
     begin
         if (ap_clk'event and ap_clk = '1') then
             if ((ap_const_logic_1 = ap_ce_reg)) then
-                ap_return_0_int_reg <= select_ln212_fu_1322_p3;
-                ap_return_1_int_reg <= select_ln213_fu_1330_p3;
+                ap_return_0_int_reg <= select_ln256_fu_1322_p3;
+                ap_return_1_int_reg <= select_ln257_fu_1330_p3;
             end if;
         end if;
     end process;
@@ -769,22 +769,22 @@ begin
         ap_block_state9_pp0_stage0_iter8 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state9_pp0_stage0_iter8_ignore_call129 <= not((ap_const_boolean_1 = ap_const_boolean_1));
 
-    ap_return_0_assign_proc : process(select_ln212_fu_1322_p3, ap_ce_reg, ap_return_0_int_reg)
+    ap_return_0_assign_proc : process(select_ln256_fu_1322_p3, ap_ce_reg, ap_return_0_int_reg)
     begin
         if ((ap_const_logic_0 = ap_ce_reg)) then 
             ap_return_0 <= ap_return_0_int_reg;
         elsif ((ap_const_logic_1 = ap_ce_reg)) then 
-            ap_return_0 <= select_ln212_fu_1322_p3;
+            ap_return_0 <= select_ln256_fu_1322_p3;
         end if; 
     end process;
 
 
-    ap_return_1_assign_proc : process(select_ln213_fu_1330_p3, ap_ce_reg, ap_return_1_int_reg)
+    ap_return_1_assign_proc : process(select_ln257_fu_1330_p3, ap_ce_reg, ap_return_1_int_reg)
     begin
         if ((ap_const_logic_0 = ap_ce_reg)) then 
             ap_return_1 <= ap_return_1_int_reg;
         elsif ((ap_const_logic_1 = ap_ce_reg)) then 
-            ap_return_1 <= select_ln213_fu_1330_p3;
+            ap_return_1 <= select_ln257_fu_1330_p3;
         end if; 
     end process;
 
@@ -799,10 +799,10 @@ begin
     end process;
 
     icmp_ln1494_fu_1316_p2 <= "1" when (grp_reduce_6_fu_1044_ap_return_0 = ap_const_lv16_0) else "0";
-    select_ln212_fu_1322_p3 <= 
+    select_ln256_fu_1322_p3 <= 
         ap_const_lv10_0 when (icmp_ln1494_fu_1316_p2(0) = '1') else 
         grp_reduce_6_fu_1044_ap_return_1;
-    select_ln213_fu_1330_p3 <= 
+    select_ln257_fu_1330_p3 <= 
         ap_const_lv10_0 when (icmp_ln1494_fu_1316_p2(0) = '1') else 
         grp_reduce_6_fu_1044_ap_return_2;
 end behav;

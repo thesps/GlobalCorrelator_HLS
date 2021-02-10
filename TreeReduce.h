@@ -15,9 +15,18 @@ constexpr int floorlog2(int x){
     return (x < 2) ? 0 : 1 + floorlog2(x / 2);
 }
 
-constexpr int pow2(int x){
-    return x == 0 ? 1 : 2 * pow2(x - 1);
+template<int B>
+constexpr int pow(int x){
+    return x == 0 ? 1 : B * pow<B>(x - 1);
 }
+
+constexpr int pow2(int x){
+    return pow<2>(x);
+}
+
+/*constexpr int pow2(int x){
+    return x == 0 ? 1 : 2 * pow2(x - 1);
+}*/
 
 /* ---
  * Balanced tree reduce implementation.

@@ -587,9 +587,9 @@ architecture behav of reduce_6 is
     signal ap_block_pp0_stage0 : BOOLEAN;
     signal icmp_ln1496_fu_4918_p2 : STD_LOGIC_VECTOR (0 downto 0);
     signal xor_ln1496_fu_4922_p2 : STD_LOGIC_VECTOR (0 downto 0);
-    signal select_ln84_fu_4928_p3 : STD_LOGIC_VECTOR (15 downto 0);
-    signal select_ln84_1_fu_4934_p3 : STD_LOGIC_VECTOR (9 downto 0);
-    signal select_ln84_2_fu_4942_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln93_fu_4928_p3 : STD_LOGIC_VECTOR (15 downto 0);
+    signal select_ln93_1_fu_4934_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln93_2_fu_4942_p3 : STD_LOGIC_VECTOR (9 downto 0);
     signal x_0_read_int_reg : STD_LOGIC_VECTOR (35 downto 0);
     signal x_1_read_int_reg : STD_LOGIC_VECTOR (35 downto 0);
     signal x_2_read_int_reg : STD_LOGIC_VECTOR (35 downto 0);
@@ -1505,9 +1505,9 @@ begin
         ap_block_state8_pp0_stage0_iter7 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state8_pp0_stage0_iter7_ignore_call513 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state8_pp0_stage0_iter7_ignore_call517 <= not((ap_const_boolean_1 = ap_const_boolean_1));
-    ap_return_0 <= select_ln84_fu_4928_p3;
-    ap_return_1 <= select_ln84_1_fu_4934_p3;
-    ap_return_2 <= select_ln84_2_fu_4942_p3;
+    ap_return_0 <= select_ln93_fu_4928_p3;
+    ap_return_1 <= select_ln93_1_fu_4934_p3;
+    ap_return_2 <= select_ln93_2_fu_4942_p3;
 
     grp_reduce_1_fu_1050_ap_ce_assign_proc : process(ap_ce, ap_block_pp0_stage0_11001_ignoreCallOp521)
     begin
@@ -1913,13 +1913,13 @@ begin
     grp_reduce_1_fu_1246_x_9_hwPhi_V_read <= x_73_read_int_reg(35 downto 26);
     grp_reduce_1_fu_1246_x_9_hwPt_V_read <= x_73_read_int_reg(16 - 1 downto 0);
     icmp_ln1496_fu_4918_p2 <= "1" when (unsigned(TemplateParticle_hwP_reg_6894) < unsigned(b_hwPt_V_read_assign_reg_6906)) else "0";
-    select_ln84_1_fu_4934_p3 <= 
+    select_ln93_1_fu_4934_p3 <= 
         call_ret_reg_6888_1 when (xor_ln1496_fu_4922_p2(0) = '1') else 
         call_ret1_reg_6900_1;
-    select_ln84_2_fu_4942_p3 <= 
+    select_ln93_2_fu_4942_p3 <= 
         call_ret_reg_6888_2 when (xor_ln1496_fu_4922_p2(0) = '1') else 
         call_ret1_reg_6900_2;
-    select_ln84_fu_4928_p3 <= 
+    select_ln93_fu_4928_p3 <= 
         TemplateParticle_hwP_reg_6894 when (xor_ln1496_fu_4922_p2(0) = '1') else 
         b_hwPt_V_read_assign_reg_6906;
     xor_ln1496_fu_4922_p2 <= (icmp_ln1496_fu_4918_p2 xor ap_const_lv1_1);

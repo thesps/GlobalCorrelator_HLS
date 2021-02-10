@@ -71,9 +71,9 @@ architecture behav of reduce is
     signal ap_block_pp0_stage0_11001 : BOOLEAN;
     signal icmp_ln1496_fu_290_p2 : STD_LOGIC_VECTOR (0 downto 0);
     signal xor_ln1496_fu_296_p2 : STD_LOGIC_VECTOR (0 downto 0);
-    signal select_ln84_fu_302_p3 : STD_LOGIC_VECTOR (15 downto 0);
-    signal select_ln84_1_fu_310_p3 : STD_LOGIC_VECTOR (9 downto 0);
-    signal select_ln84_2_fu_318_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln93_fu_302_p3 : STD_LOGIC_VECTOR (15 downto 0);
+    signal select_ln93_1_fu_310_p3 : STD_LOGIC_VECTOR (9 downto 0);
+    signal select_ln93_2_fu_318_p3 : STD_LOGIC_VECTOR (9 downto 0);
 
     component reduce_2 IS
     port (
@@ -155,9 +155,9 @@ begin
         ap_block_state2_pp0_stage0_iter1 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state2_pp0_stage0_iter1_ignore_call25 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state2_pp0_stage0_iter1_ignore_call29 <= not((ap_const_boolean_1 = ap_const_boolean_1));
-    ap_return_0 <= select_ln84_fu_302_p3;
-    ap_return_1 <= select_ln84_1_fu_310_p3;
-    ap_return_2 <= select_ln84_2_fu_318_p3;
+    ap_return_0 <= select_ln93_fu_302_p3;
+    ap_return_1 <= select_ln93_1_fu_310_p3;
+    ap_return_2 <= select_ln93_2_fu_318_p3;
 
     grp_reduce_2_fu_210_ap_ce_assign_proc : process(ap_block_pp0_stage0_11001_ignoreCallOp27, ap_ce)
     begin
@@ -179,13 +179,13 @@ begin
     end process;
 
     icmp_ln1496_fu_290_p2 <= "1" when (unsigned(grp_reduce_2_fu_210_ap_return_0) < unsigned(grp_reduce_2_fu_238_ap_return_0)) else "0";
-    select_ln84_1_fu_310_p3 <= 
+    select_ln93_1_fu_310_p3 <= 
         grp_reduce_2_fu_210_ap_return_1 when (xor_ln1496_fu_296_p2(0) = '1') else 
         grp_reduce_2_fu_238_ap_return_1;
-    select_ln84_2_fu_318_p3 <= 
+    select_ln93_2_fu_318_p3 <= 
         grp_reduce_2_fu_210_ap_return_2 when (xor_ln1496_fu_296_p2(0) = '1') else 
         grp_reduce_2_fu_238_ap_return_2;
-    select_ln84_fu_302_p3 <= 
+    select_ln93_fu_302_p3 <= 
         grp_reduce_2_fu_210_ap_return_0 when (xor_ln1496_fu_296_p2(0) = '1') else 
         grp_reduce_2_fu_238_ap_return_0;
     xor_ln1496_fu_296_p2 <= (icmp_ln1496_fu_290_p2 xor ap_const_lv1_1);

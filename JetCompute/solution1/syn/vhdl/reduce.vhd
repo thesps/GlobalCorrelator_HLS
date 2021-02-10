@@ -33,7 +33,7 @@ architecture behav of reduce is
     signal p_s_reduce_2_fu_76_ap_return : STD_LOGIC_VECTOR (2 downto 0);
     signal p_1_reduce_2_fu_88_ap_ready : STD_LOGIC;
     signal p_1_reduce_2_fu_88_ap_return : STD_LOGIC_VECTOR (2 downto 0);
-    signal zext_ln52_fu_100_p1 : STD_LOGIC_VECTOR (3 downto 0);
+    signal zext_ln61_fu_100_p1 : STD_LOGIC_VECTOR (3 downto 0);
     signal zext_ln209_fu_104_p1 : STD_LOGIC_VECTOR (3 downto 0);
 
     component reduce_2 IS
@@ -71,7 +71,7 @@ begin
 
 
     ap_ready <= ap_const_logic_1;
-    ap_return <= std_logic_vector(unsigned(zext_ln52_fu_100_p1) + unsigned(zext_ln209_fu_104_p1));
+    ap_return <= std_logic_vector(unsigned(zext_ln61_fu_100_p1) + unsigned(zext_ln209_fu_104_p1));
     zext_ln209_fu_104_p1 <= std_logic_vector(IEEE.numeric_std.resize(unsigned(p_1_reduce_2_fu_88_ap_return),4));
-    zext_ln52_fu_100_p1 <= std_logic_vector(IEEE.numeric_std.resize(unsigned(p_s_reduce_2_fu_76_ap_return),4));
+    zext_ln61_fu_100_p1 <= std_logic_vector(IEEE.numeric_std.resize(unsigned(p_s_reduce_2_fu_76_ap_return),4));
 end behav;

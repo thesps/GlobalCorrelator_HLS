@@ -152,24 +152,33 @@ architecture behav of reduce_20 is
     constant ap_const_boolean_1 : BOOLEAN := true;
     constant ap_const_boolean_0 : BOOLEAN := false;
 
-    signal grp_reduce_15_fu_1036_ap_return : STD_LOGIC_VECTOR (21 downto 0);
-    signal p_Val2_s_reg_1304 : STD_LOGIC_VECTOR (21 downto 0);
     signal ap_block_state1_pp0_stage0_iter0 : BOOLEAN;
     signal ap_block_state2_pp0_stage0_iter1 : BOOLEAN;
     signal ap_block_state3_pp0_stage0_iter2 : BOOLEAN;
+    signal ap_block_state4_pp0_stage0_iter3 : BOOLEAN;
+    signal ap_block_state5_pp0_stage0_iter4 : BOOLEAN;
+    signal ap_block_state6_pp0_stage0_iter5 : BOOLEAN;
     signal ap_block_pp0_stage0_11001 : BOOLEAN;
+    signal grp_reduce_15_fu_1036_ap_return : STD_LOGIC_VECTOR (21 downto 0);
+    signal p_Val2_s_reg_1944 : STD_LOGIC_VECTOR (21 downto 0);
     signal grp_reduce_15_fu_1168_ap_return : STD_LOGIC_VECTOR (21 downto 0);
-    signal p_Val2_3_reg_1309 : STD_LOGIC_VECTOR (21 downto 0);
+    signal p_Val2_3_reg_1949 : STD_LOGIC_VECTOR (21 downto 0);
     signal grp_reduce_15_fu_1036_ap_ce : STD_LOGIC;
     signal ap_block_state1_pp0_stage0_iter0_ignore_call129 : BOOLEAN;
     signal ap_block_state2_pp0_stage0_iter1_ignore_call129 : BOOLEAN;
     signal ap_block_state3_pp0_stage0_iter2_ignore_call129 : BOOLEAN;
-    signal ap_block_pp0_stage0_11001_ignoreCallOp132 : BOOLEAN;
+    signal ap_block_state4_pp0_stage0_iter3_ignore_call129 : BOOLEAN;
+    signal ap_block_state5_pp0_stage0_iter4_ignore_call129 : BOOLEAN;
+    signal ap_block_state6_pp0_stage0_iter5_ignore_call129 : BOOLEAN;
+    signal ap_block_pp0_stage0_11001_ignoreCallOp135 : BOOLEAN;
     signal grp_reduce_15_fu_1168_ap_ce : STD_LOGIC;
     signal ap_block_state1_pp0_stage0_iter0_ignore_call130 : BOOLEAN;
     signal ap_block_state2_pp0_stage0_iter1_ignore_call130 : BOOLEAN;
     signal ap_block_state3_pp0_stage0_iter2_ignore_call130 : BOOLEAN;
-    signal ap_block_pp0_stage0_11001_ignoreCallOp133 : BOOLEAN;
+    signal ap_block_state4_pp0_stage0_iter3_ignore_call130 : BOOLEAN;
+    signal ap_block_state5_pp0_stage0_iter4_ignore_call130 : BOOLEAN;
+    signal ap_block_state6_pp0_stage0_iter5_ignore_call130 : BOOLEAN;
+    signal ap_block_pp0_stage0_11001_ignoreCallOp136 : BOOLEAN;
     signal ap_block_pp0_stage0 : BOOLEAN;
     signal x_0_V_read_int_reg : STD_LOGIC_VECTOR (21 downto 0);
     signal x_1_V_read_int_reg : STD_LOGIC_VECTOR (21 downto 0);
@@ -524,8 +533,8 @@ begin
     begin
         if (ap_clk'event and ap_clk = '1') then
             if (((ap_const_boolean_0 = ap_block_pp0_stage0_11001) and (ap_const_logic_1 = ap_ce))) then
-                p_Val2_3_reg_1309 <= grp_reduce_15_fu_1168_ap_return;
-                p_Val2_s_reg_1304 <= grp_reduce_15_fu_1036_ap_return;
+                p_Val2_3_reg_1949 <= grp_reduce_15_fu_1168_ap_return;
+                p_Val2_s_reg_1944 <= grp_reduce_15_fu_1036_ap_return;
             end if;
         end if;
     end process;
@@ -666,8 +675,8 @@ begin
     end process;
         ap_block_pp0_stage0 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_pp0_stage0_11001 <= not((ap_const_boolean_1 = ap_const_boolean_1));
-        ap_block_pp0_stage0_11001_ignoreCallOp132 <= not((ap_const_boolean_1 = ap_const_boolean_1));
-        ap_block_pp0_stage0_11001_ignoreCallOp133 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_pp0_stage0_11001_ignoreCallOp135 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_pp0_stage0_11001_ignoreCallOp136 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state1_pp0_stage0_iter0 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state1_pp0_stage0_iter0_ignore_call129 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state1_pp0_stage0_iter0_ignore_call130 <= not((ap_const_boolean_1 = ap_const_boolean_1));
@@ -677,11 +686,20 @@ begin
         ap_block_state3_pp0_stage0_iter2 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state3_pp0_stage0_iter2_ignore_call129 <= not((ap_const_boolean_1 = ap_const_boolean_1));
         ap_block_state3_pp0_stage0_iter2_ignore_call130 <= not((ap_const_boolean_1 = ap_const_boolean_1));
-    ap_return <= std_logic_vector(unsigned(p_Val2_3_reg_1309) + unsigned(p_Val2_s_reg_1304));
+        ap_block_state4_pp0_stage0_iter3 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state4_pp0_stage0_iter3_ignore_call129 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state4_pp0_stage0_iter3_ignore_call130 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state5_pp0_stage0_iter4 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state5_pp0_stage0_iter4_ignore_call129 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state5_pp0_stage0_iter4_ignore_call130 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state6_pp0_stage0_iter5 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state6_pp0_stage0_iter5_ignore_call129 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+        ap_block_state6_pp0_stage0_iter5_ignore_call130 <= not((ap_const_boolean_1 = ap_const_boolean_1));
+    ap_return <= std_logic_vector(unsigned(p_Val2_3_reg_1949) + unsigned(p_Val2_s_reg_1944));
 
-    grp_reduce_15_fu_1036_ap_ce_assign_proc : process(ap_ce, ap_block_pp0_stage0_11001_ignoreCallOp132)
+    grp_reduce_15_fu_1036_ap_ce_assign_proc : process(ap_ce, ap_block_pp0_stage0_11001_ignoreCallOp135)
     begin
-        if (((ap_const_boolean_0 = ap_block_pp0_stage0_11001_ignoreCallOp132) and (ap_const_logic_1 = ap_ce))) then 
+        if (((ap_const_boolean_0 = ap_block_pp0_stage0_11001_ignoreCallOp135) and (ap_const_logic_1 = ap_ce))) then 
             grp_reduce_15_fu_1036_ap_ce <= ap_const_logic_1;
         else 
             grp_reduce_15_fu_1036_ap_ce <= ap_const_logic_0;
@@ -689,9 +707,9 @@ begin
     end process;
 
 
-    grp_reduce_15_fu_1168_ap_ce_assign_proc : process(ap_ce, ap_block_pp0_stage0_11001_ignoreCallOp133)
+    grp_reduce_15_fu_1168_ap_ce_assign_proc : process(ap_ce, ap_block_pp0_stage0_11001_ignoreCallOp136)
     begin
-        if (((ap_const_boolean_0 = ap_block_pp0_stage0_11001_ignoreCallOp133) and (ap_const_logic_1 = ap_ce))) then 
+        if (((ap_const_logic_1 = ap_ce) and (ap_const_boolean_0 = ap_block_pp0_stage0_11001_ignoreCallOp136))) then 
             grp_reduce_15_fu_1168_ap_ce <= ap_const_logic_1;
         else 
             grp_reduce_15_fu_1168_ap_ce <= ap_const_logic_0;
